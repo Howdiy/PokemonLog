@@ -15,6 +15,7 @@ public static class PokemonSpriteAtlasProvider
         }
 
         SpriteAtlasManager.atlasRegistered += OnAtlasRegistered;
+        SpriteAtlasManager.atlasRequested += OnAtlasRequested;
         _initialized = true;
     }
 
@@ -26,6 +27,19 @@ public static class PokemonSpriteAtlasProvider
         }
 
         CachedAtlases[atlas.name] = atlas;
+    }
+
+    private static void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> onCompleted)
+    {
+        SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasName);
+        if (atlas == null)
+        {
+            onCompleted?.Invoke(null);
+            return;
+        }
+
+        CachedAtlases[atlas.name] = atlas;
+        onCompleted?.Invoke(atlas);
     }
 
     public static SpriteAtlas GetAtlas(string atlasName)
@@ -49,8 +63,7 @@ public static class PokemonSpriteAtlasProvider
             return atlas;
         }
 
-        SpriteAtlasManager.RequestAtlas(atlasName);
-        CachedAtlases.TryGetValue(atlasName, out atlas);
+        OnAtlasRequested(atlasName, loadedAtlas => atlas = loadedAtlas);
         return atlas;
     }
 
