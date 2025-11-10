@@ -8,14 +8,14 @@ using TMPro;
 
 public class PokemonBattleManager : MonoBehaviour
 {
-    // @ ½Ì±ÛÅæ
+    // @ ì‹±ê¸€í†¤
     public static PokemonBattleManager instance;
     public static PokemonBattleManager Instance { get; private set; }
 
-    // @ ¼³Á¤
+    // @ ì„¤ì •
     public Setting settingsRef;
 
-    // @ ÀüÅõ UI
+    // @ ì „íˆ¬ UI
     public PokemonInfo myInfo;
     public PokemonInfo otherInfo;
 
@@ -29,19 +29,19 @@ public class PokemonBattleManager : MonoBehaviour
     public Button[] commandBts;
     public Button[] skill1_4;
 
-    // »óÁ¡
+    // ìƒì 
     public GameObject ShopPanel;
     public Button[] shopItemButtons;
 
-    // ±³Ã¼
+    // êµì²´
     public GameObject switchPanel;
 
-    // ³»ºÎ »óÅÂ
+    // ë‚´ë¶€ ìƒíƒœ
     private int roundIndex = 1;
     private bool isPlayerTurn = true;
 
     // =========================================================
-    // ¶óÀÌÇÁ»çÀÌÅ¬
+    // ë¼ì´í”„ì‚¬ì´í´
     // =========================================================
     private void Awake()
     {
@@ -53,21 +53,19 @@ public class PokemonBattleManager : MonoBehaviour
                 return;
             }
         }
-        Instance = this;   // @ ´©¶ô º¸¿Ï
-        instance = this;   // @ °ú°Å ÄÚµå È£È¯
-    }
-
-    private void OnDestroy()
-    {
-        if (Instance == this)
+        myPokemonB = PokemonGamemanager.SelectAvailablePokemon(true, true);
+        otherPokemonB = PokemonGamemanager.SelectAvailablePokemon(false, true);
+        if (myPokemonB == null || otherPokemonB == null)
         {
-            Instance = null;
+            if (textLog != null)
+            {
+                textLog.text = "  Ï¸ Õ´Ï´.";
+                textLog.gameObject.SetActive(true);
+            }
+            return;
         }
-    }
 
-    private void Start()
-    {
-        // @ PokemonChoices ¡æ Battle ÀüÈ¯ ½Ã Àü´Ş Æ÷ÀÎÅÍ º¸°­
+        // @ PokemonChoices â†’ Battle ì „í™˜ ì‹œ ì „ë‹¬ í¬ì¸í„° ë³´ê°•
         if (myPokemonB == null)
         {
             if (PokemonGamemanager.myPokemonG != null)
@@ -111,7 +109,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // ¼±Á¦°ø°İ
+    // ì„ ì œê³µê²©
     // =========================================================
     private void DecideFirstTurn()
     {
@@ -135,7 +133,7 @@ public class PokemonBattleManager : MonoBehaviour
         {
             return;
         }
-        string msg = isPlayerTurn ? "¼±Á¦°ø°İ ÆÇÁ¤ ¼º°ø!" : "¼±Á¦°ø°İ ÆÇÁ¤ ½ÇÆĞ";
+        string msg = isPlayerTurn ? "ì„ ì œê³µê²© íŒì • ì„±ê³µ!" : "ì„ ì œê³µê²© íŒì • ì‹¤íŒ¨";
         textLog.text = msg;
         textLog.gameObject.SetActive(true);
         StartCoroutine(HideLogAfter(0.75f));
@@ -151,7 +149,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // ¹öÆ° ¹ÙÀÎµù
+    // ë²„íŠ¼ ë°”ì¸ë”©
     // =========================================================
     private void BindCommandButtons()
     {
@@ -236,7 +234,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // Ä¿¸Çµå µ¿ÀÛ
+    // ì»¤ë§¨ë“œ ë™ì‘
     // =========================================================
     public void OnClickAttackCommand()
     {
@@ -249,12 +247,12 @@ public class PokemonBattleManager : MonoBehaviour
         {
             if (myPokemonB != null)
             {
-                textLog.text = myPokemonB.name + "ÀÌ °ø°İÇÏ¿´´Ù.";
+                textLog.text = myPokemonB.name + "ì´ ê³µê²©í•˜ì˜€ë‹¤.";
                 textLog.gameObject.SetActive(true);
             }
         }
 
-        StartCoroutine(PerformAttack(myPokemonB, otherPokemonB, -1)); // -1: ÀÏ¹İ°ø°İ
+        StartCoroutine(PerformAttack(myPokemonB, otherPokemonB, -1)); // -1: ì¼ë°˜ê³µê²©
     }
 
     public void OpenSkillPanel()
@@ -270,7 +268,7 @@ public class PokemonBattleManager : MonoBehaviour
         }
     }
 
-    // ½ºÅ³ ¹öÆ° ÇÚµé·¯ 0~3
+    // ìŠ¤í‚¬ ë²„íŠ¼ í•¸ë“¤ëŸ¬ 0~3
     public void OnClickSkill0() { OnSkillClick(0); }
     public void OnClickSkill1() { OnSkillClick(1); }
     public void OnClickSkill2() { OnSkillClick(2); }
@@ -287,7 +285,7 @@ public class PokemonBattleManager : MonoBehaviour
         {
             if (myPokemonB != null)
             {
-                string sName = "½ºÅ³";
+                string sName = "ìŠ¤í‚¬";
                 if (myPokemonB.skillNames != null)
                 {
                     if (skillIdx >= 0)
@@ -298,7 +296,7 @@ public class PokemonBattleManager : MonoBehaviour
                         }
                     }
                 }
-                textLog.text = myPokemonB.name + "ÀÌ " + sName + "À» »ç¿ëÇÏ¿´´Ù.";
+                textLog.text = myPokemonB.name + "ì´ " + sName + "ì„ ì‚¬ìš©í•˜ì˜€ë‹¤.";
                 textLog.gameObject.SetActive(true);
             }
         }
@@ -330,24 +328,24 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // ÀüÅõ ½ÇÇà
+    // ì „íˆ¬ ì‹¤í–‰
     // =========================================================
     private IEnumerator PerformAttack(Pokemon attacker, Pokemon defender, int skillIndex)
     {
         if (attacker == null) { yield break; }
         if (defender == null) { yield break; }
 
-        // @ ÀÌµ¿ ¹× Æ÷Áî ¿¬ÃâÀ» ¸Å´ÏÀú¿¡¼­ È®½ÇÈ÷ Æ®¸®°Å
+        // @ ì´ë™ ë° í¬ì¦ˆ ì—°ì¶œì„ ë§¤ë‹ˆì €ì—ì„œ í™•ì‹¤íˆ íŠ¸ë¦¬ê±°
         if (attacker.info != null)
         {
             attacker.info.ApplyAttackPose();
             attacker.info.SpriteMove(defender != null ? defender.info : null);
         }
 
-        // @ ½ÇÁ¦ Å¸°İ ·ÎÁ÷Àº Pokemon.Attack ¿¡¼­ Ã³¸®
+        // @ ì‹¤ì œ íƒ€ê²© ë¡œì§ì€ Pokemon.Attack ì—ì„œ ì²˜ë¦¬
         yield return StartCoroutine(attacker.Attack(defender, skillIndex));
 
-        // @ »ó´ë ¸®¾×¼Ç Æ÷Áî °¡º±°Ô »ç¿ë ÈÄ ¿øÀ§Ä¡
+        // @ ìƒëŒ€ ë¦¬ì•¡ì…˜ í¬ì¦ˆ ê°€ë³ê²Œ ì‚¬ìš© í›„ ì›ìœ„ì¹˜
         if (defender != null)
         {
             if (defender.info != null)
@@ -369,17 +367,17 @@ public class PokemonBattleManager : MonoBehaviour
             }
         }
 
-        // @ ·Î±× Àá½Ã º¸¿©ÁØ µÚ ¼û±è
+        // @ ë¡œê·¸ ì ì‹œ ë³´ì—¬ì¤€ ë’¤ ìˆ¨ê¹€
         yield return new WaitForSeconds(0.35f);
         if (textLog != null)
         {
             textLog.gameObject.SetActive(false);
         }
 
-        // @ ±âÀı Ã¼Å© ¹× ±³Ã¼
+        // @ ê¸°ì ˆ ì²´í¬ ë° êµì²´
         yield return StartCoroutine(CheckAndResolveFaintStates());
 
-        // @ ÅÏ ÀüÈ¯
+        // @ í„´ ì „í™˜
         if (isPlayerTurn)
         {
             isPlayerTurn = false;
@@ -389,7 +387,7 @@ public class PokemonBattleManager : MonoBehaviour
             isPlayerTurn = true;
         }
 
-        // @ Àû Çàµ¿
+        // @ ì  í–‰ë™
         if (!isPlayerTurn)
         {
             yield return StartCoroutine(EnemyActOnceThenPass());
@@ -415,14 +413,45 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // Àû Çàµ¿
-    // =========================================================
-    private IEnumerator EnemyActOnceThenPass()
-    {
-        yield return new WaitForSeconds(0.5f);
+        if (otherPokemonB == null || myPokemonB == null)
+        {
+            yield break;
+        }
 
-        int r = Random.Range(0, 10);
-        if (r < 7)
+        Pokemon newP = PokemonGamemanager.SelectAvailablePokemon(true, false);
+            if (myPokemonB != null)
+            {
+                myPokemonB.info = myInfo;
+                myInfo.ApplyBattleIdlePose();
+            }
+
+        if (newP == null)
+        {
+            if (textLog != null)
+            {
+                textLog.text = " Ì»   Ï¸ .";
+                textLog.gameObject.SetActive(true);
+            }
+        }
+
+    {
+        Pokemon newE = PokemonGamemanager.SelectAvailablePokemon(false, false);
+
+            if (otherPokemonB != null)
+            {
+                otherPokemonB.info = otherInfo;
+                otherInfo.ApplyBattleIdlePose();
+            }
+
+        if (newE == null)
+        {
+            if (textLog != null)
+            {
+                textLog.text = "ë°¡  Ì»  Ï¸ .";
+                textLog.gameObject.SetActive(true);
+            }
+        }
+
         {
             int s = Random.Range(0, 4);
 
@@ -430,7 +459,7 @@ public class PokemonBattleManager : MonoBehaviour
             {
                 if (otherPokemonB != null)
                 {
-                    string sName = "½ºÅ³";
+                    string sName = "ìŠ¤í‚¬";
                     if (otherPokemonB.skillNames != null)
                     {
                         if (s >= 0)
@@ -441,7 +470,7 @@ public class PokemonBattleManager : MonoBehaviour
                             }
                         }
                     }
-                    textLog.text = "ÀûÀÇ " + otherPokemonB.name + "ÀÌ " + sName + "À» »ç¿ëÇÏ¿´´Ù.";
+                    textLog.text = "ì ì˜ " + otherPokemonB.name + "ì´ " + sName + "ì„ ì‚¬ìš©í•˜ì˜€ë‹¤.";
                     textLog.gameObject.SetActive(true);
                 }
             }
@@ -453,7 +482,7 @@ public class PokemonBattleManager : MonoBehaviour
             {
                 if (otherPokemonB != null)
                 {
-                    textLog.text = "ÀûÀÇ " + otherPokemonB.name + "ÀÌ °ø°İÇÏ¿´´Ù.";
+                    textLog.text = "ì ì˜ " + otherPokemonB.name + "ì´ ê³µê²©í•˜ì˜€ë‹¤.";
                     textLog.gameObject.SetActive(true);
                 }
             }
@@ -463,7 +492,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // ±³Ã¼(»ùÇÃ)
+    // êµì²´(ìƒ˜í”Œ)
     // =========================================================
     private IEnumerator DoSwitchPlayer()
     {
@@ -494,7 +523,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
-    // »óÁ¡
+    // ìƒì 
     // =========================================================
     private enum ShopKind { HealHP, BuffATK, BuffDEF, BuffSPD }
     private struct ShopItem
@@ -598,14 +627,14 @@ public class PokemonBattleManager : MonoBehaviour
         int r = Random.Range(0, 4);
         ShopItem it = new ShopItem();
 
-        if (r == 0) { it.kind = ShopKind.HealHP; it.value = Random.Range(10, 31); it.label = "HP È¸º¹ +" + it.value; }
+        if (r == 0) { it.kind = ShopKind.HealHP; it.value = Random.Range(10, 31); it.label = "HP íšŒë³µ +" + it.value; }
         else
         {
-            if (r == 1) { it.kind = ShopKind.BuffATK; it.value = Random.Range(2, 7); it.label = "°ø°İ +" + it.value; }
+            if (r == 1) { it.kind = ShopKind.BuffATK; it.value = Random.Range(2, 7); it.label = "ê³µê²© +" + it.value; }
             else
             {
-                if (r == 2) { it.kind = ShopKind.BuffDEF; it.value = Random.Range(2, 7); it.label = "¹æ¾î +" + it.value; }
-                else { it.kind = ShopKind.BuffSPD; it.value = Random.Range(2, 7); it.label = "¼Óµµ +" + it.value; }
+                if (r == 2) { it.kind = ShopKind.BuffDEF; it.value = Random.Range(2, 7); it.label = "ë°©ì–´ +" + it.value; }
+                else { it.kind = ShopKind.BuffSPD; it.value = Random.Range(2, 7); it.label = "ì†ë„ +" + it.value; }
             }
         }
         return it;
@@ -630,14 +659,14 @@ public class PokemonBattleManager : MonoBehaviour
         {
             bool isEnemy = false;
             if (p == otherPokemonB) { isEnemy = true; }
-            string prefix = isEnemy ? "ÀûÀÇ " : "";
-            textLog.text = prefix + p.name + "ÀÌ " + it.label + "À» »ç¿ëÇÏ¿´´Ù.";
+            string prefix = isEnemy ? "ì ì˜ " : "";
+            textLog.text = prefix + p.name + "ì´ " + it.label + "ì„ ì‚¬ìš©í•˜ì˜€ë‹¤.";
             textLog.gameObject.SetActive(true);
         }
     }
 
     // =========================================================
-    // À¯Æ¿
+    // ìœ í‹¸
     // =========================================================
     public static Pokemon CreateByIndexShared(Pokemon.PokemonIndex idx, bool isPlayerSide)
     {
