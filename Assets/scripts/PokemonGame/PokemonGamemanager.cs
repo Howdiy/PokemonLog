@@ -715,6 +715,7 @@ public class PokemonGamemanager : MonoBehaviour
     {
         playerTeam3 = new Pokemon[3];
         enemyTeam3 = new Pokemon[3];
+        _enemyBuiltOnce = false;
 
         if (dto.player != null)
         {
@@ -728,6 +729,7 @@ public class PokemonGamemanager : MonoBehaviour
             if (dto.enemy.Length > 0 && dto.enemy[0] != null) { enemyTeam3[0] = FromDTO(dto.enemy[0], false); }
             if (dto.enemy.Length > 1 && dto.enemy[1] != null) { enemyTeam3[1] = FromDTO(dto.enemy[1], false); }
             if (dto.enemy.Length > 2 && dto.enemy[2] != null) { enemyTeam3[2] = FromDTO(dto.enemy[2], false); }
+            _enemyBuiltOnce = TeamIsFull(enemyTeam3);
         }
 
         playerActiveIndex = dto.playerActive;
@@ -786,6 +788,7 @@ public class PokemonGamemanager : MonoBehaviour
         enemyTeam3 = new Pokemon[3];
         playerActiveIndex = 0;
         enemyActiveIndex = 0;
+        _enemyBuiltOnce = false;
 
         myPokemonG = null;
         otherPokemonG = null;
