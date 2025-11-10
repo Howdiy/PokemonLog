@@ -361,13 +361,7 @@ public class PokemonGamemanager : MonoBehaviour
     {
         OnPokemonClick((int)Pokemon.PokemonIndex.eSang);
     }
-
-    /// <summary> @ 포켓몬 선택(인스펙터에서 쓰던 이름과 맞춤) </summary>
-    public void OnPokemonCilck(int index)
-    {
-        OnPokemonClick(index);
-    }
-
+    
     /// <summary> @ 포켓몬 선택(새 이름) </summary>
     public void OnPokemonClick(int index)
     {
