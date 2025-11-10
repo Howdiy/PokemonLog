@@ -163,7 +163,7 @@ MonoBehaviour:
   - {fileID: 1151097989}
   - {fileID: 70382501}
   - {fileID: 576465988}
-  goBattleButton: {fileID: 0}
+  goBattleButton: {fileID: 352040642}
   StartBT: {fileID: 0}
   ContinueBT: {fileID: 0}
   ExitBT: {fileID: 0}
@@ -1620,8 +1620,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278190080
+  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1638,10 +1638,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 70
+  m_fontSize: 70.85
   m_fontSizeBase: 70
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -1674,7 +1674,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -408.849, y: 0, z: -488.56165, w: -95.14093}
+  m_margin: {x: -408.849, y: -70.92682, z: -488.56165, w: -186.92883}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0

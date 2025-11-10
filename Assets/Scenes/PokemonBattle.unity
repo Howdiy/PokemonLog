@@ -1464,7 +1464,11 @@ MonoBehaviour:
   image: {fileID: 613551664}
   nameText: {fileID: 1697737164}
   hpText: {fileID: 354189721}
-  battleManager: {fileID: 1699295608}
+  BattleGameManager: {fileID: 1699295608}
+  choiceSprite: {fileID: 0}
+  battleIdleSprite: {fileID: 0}
+  skillSprite: {fileID: 0}
+  attackSprite: {fileID: 0}
 --- !u!1 &354189719
 GameObject:
   m_ObjectHideFlags: 0
@@ -6493,33 +6497,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd28bbfbb0c786b40b82ed66906ec9f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sprites:
-  - {fileID: 21300000, guid: 6ac5567002672a5449140c5b5530be45, type: 3}
-  - {fileID: 21300000, guid: 51a548bab77329443b235153f54e7460, type: 3}
-  - {fileID: 21300000, guid: 40567a5644b582347b98a82c2b416ce7, type: 3}
-  - {fileID: 21300000, guid: cbe5651ea7b93f54fae8ece4c3dec4d5, type: 3}
+  settingsRef: {fileID: 1644932674905681637, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
+  myInfo: {fileID: 338172510}
+  otherInfo: {fileID: 1997472510}
   textLog: {fileID: 6436242}
-  skillBts:
-  - {fileID: 1184139521}
-  - {fileID: 714299220}
-  - {fileID: 702402976}
-  - {fileID: 1336718771}
-  skillNames:
-  - {fileID: 25368642}
-  - {fileID: 12090335}
-  - {fileID: 435571129}
-  - {fileID: 118872887}
-  myPokemonInfo: {fileID: 338172510}
-  otherPokemonInfo: {fileID: 1997472510}
-  gameOverBt: {fileID: 0}
-  normalAttackEffectPrefab: {fileID: 6710139492206580332, guid: 95b8d3d65b5d7f1409c4ed1723887826, type: 3}
-  effectParent: {fileID: 0}
-  normalAttackEffectLifetime: 1
-  attackMoveDuration: 0.25
-  attackReturnDuration: 0.25
-  meleeStopOffset: 100
-  playerUI: {fileID: 1250616864}
-  pokemonSkill: {fileID: 1997472508}
+  roundText: {fileID: 867803702}
+  commandBts:
+  - {fileID: 968545053}
+  - {fileID: 1854986570}
+  - {fileID: 771588480}
+  - {fileID: 895715396}
+  skill1_4:
+  - {fileID: 1184139523}
+  - {fileID: 714299222}
+  - {fileID: 702402978}
+  - {fileID: 1336718773}
+  ShopPanel: {fileID: 1869379890}
+  shopItemButtons:
+  - {fileID: 940140116}
+  - {fileID: 1609596726}
+  - {fileID: 1585609705}
+  - {fileID: 2088690873}
+  - {fileID: 276148322}
+  switchPanel: {fileID: 1811491837}
 --- !u!4 &1699295609
 Transform:
   m_ObjectHideFlags: 0
@@ -7674,7 +7674,11 @@ MonoBehaviour:
   image: {fileID: 702423920}
   nameText: {fileID: 428257094}
   hpText: {fileID: 233784199}
-  battleManager: {fileID: 1699295608}
+  BattleGameManager: {fileID: 1699295608}
+  choiceSprite: {fileID: 0}
+  battleIdleSprite: {fileID: 0}
+  skillSprite: {fileID: 0}
+  attackSprite: {fileID: 0}
 --- !u!1 &2059726367
 GameObject:
   m_ObjectHideFlags: 0
