@@ -44,7 +44,9 @@ public class PokemonGamemanager : MonoBehaviour
     // @ 내부 플래그: 적 팀을 이미 구성했는가
     private static bool _enemyBuiltOnce = false;
 
+    // =========================================================
     // @ 저장 DTO
+    // =========================================================
     [Serializable]
     public class PokemonDTO
     {
@@ -68,7 +70,11 @@ public class PokemonGamemanager : MonoBehaviour
         public string sceneName;
     }
 
-    // @ 저장 경로
+    // =========================================================
+    // @ 저장 경로 & PlayerPrefs 플래그
+    // =========================================================
+    private const string SAVE_FLAG_KEY = "POKEMON_SAVE_FLAG_V1";
+
     private static string SavePath
     {
         get
@@ -79,43 +85,90 @@ public class PokemonGamemanager : MonoBehaviour
         }
     }
 
+    /// <summary> @ 파일이 존재하고 PlayerPrefs 플래그가 있을 때만 '진짜 저장 있음'으로 간주 </summary>
     public static bool HasSaveData()
     {
-        return File.Exists(SavePath);
+        bool fileExists = File.Exists(SavePath);
+        bool flagExists = PlayerPrefs.HasKey(SAVE_FLAG_KEY);
+        if (fileExists)
+        {
+            if (flagExists)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
+    private static void MarkSaveFlag()
+    {
+        PlayerPrefs.SetInt(SAVE_FLAG_KEY, 1);
+        PlayerPrefs.Save();
+    }
+
+    private static void ClearSaveFlag()
+    {
+        if (PlayerPrefs.HasKey(SAVE_FLAG_KEY))
+        {
+            PlayerPrefs.DeleteKey(SAVE_FLAG_KEY);
+            PlayerPrefs.Save();
+        }
+    }
+
+    private static void DeleteSaveFileIfExists()
+    {
+        if (File.Exists(SavePath))
+        {
+            try
+            {
+                File.Delete(SavePath);
+            }
+            catch
+            {
+                // @ 파일 삭제 실패는 무시
+            }
+        }
+    }
+
+    // =========================================================
+    // @ 라이프사이클
+    // =========================================================
     private void Awake()
     {
-        // @ Setting 프리팹 인스턴스 생성·부모 지정·uiRoot·정렬·초기위치 보정
         EnsureSettingPrefabUnderCanvas();
     }
 
-    /// <summary> @ 시작 시 선택 씬이라면 초기 goBattle 표시/적팀 준비 </summary>
+    /// <summary> @ 시작 시 선택 씬이라면 초기 goBattle 표시/적팀 준비, Start 씬이면 버튼 상태 갱신 및 바인딩 </summary>
     private void Start()
     {
-        // @ 선택 씬에서만 goBattle 표시 상태를 갱신
-        EnsureEnemyTeamIfNeeded(true);
-        UpdateChoiceUI();       // @ 텍스트 갱신
-        UpdateGoBattleActive(); // @ 버튼 표시 갱신
+        string scene = SceneManager.GetActiveScene().name;
 
-        // @ 시작 씬일 때만 Start/Continue/Exit 자동 배선
-        WireStartMenuButtons();
+        EnsureEnemyTeamIfNeeded(true);
+        UpdateChoiceUI();
+        UpdateGoBattleActive();
+
+        WireStartMenuButtonsIfStartScene(scene);
+        WireGoBattleButtonIfChoicesScene(scene);
     }
 
-    /// <summary> @ 텍스트 안내와 선택 수 표시 </summary>
+    // =========================================================
+    // @ UI 텍스트
+    // =========================================================
     private void UpdateChoiceUI()
     {
         if (titleText != null)
         {
             int filled = playerTrainer != null ? playerTrainer.CountFilled() : 0;
-            titleText.text = "포켓몬 선택\n" +
-                             "바깥은 혼자 돌아다니긴 위험하단다\n" +
-                             "이 아이들 중 하나를 데려가렴\n" +
-                             "(내 팀 " + filled.ToString() + " / 3)";
+            titleText.text = "포켓몬 선택\n"
+                           + "바깥은 혼자 돌아다니긴 위험하단다\n"
+                           + "이 아이들 중 하나를 데려가렴\n"
+                           + "(내 팀 " + filled.ToString() + " / 3)";
         }
     }
 
-    /// <summary> @ 적 팀 3마리 무작위 구성(중복 없이 3종) </summary>
+    // =========================================================
+    // @ 적 팀 구성
+    // =========================================================
     private static void BuildRandomEnemyTeam3()
     {
         List<Pokemon.PokemonIndex> pool = new List<Pokemon.PokemonIndex>();
@@ -146,85 +199,57 @@ public class PokemonGamemanager : MonoBehaviour
         otherPokemonG = enemyTrainer.ActivePokemon;
     }
 
-    /// <summary> @ 인덱스로 포켓몬 생성 </summary>
     public static Pokemon SelectAvailablePokemon(bool forPlayer, bool includeCurrentSlot)
     {
         PokemonTrainer trainer = forPlayer ? playerTrainer : enemyTrainer;
         if (trainer == null)
         {
-            if (forPlayer)
-            {
-                myPokemonG = null;
-            }
-            else
-            {
-                otherPokemonG = null;
-            }
+            if (forPlayer) { myPokemonG = null; } else { otherPokemonG = null; }
             return null;
         }
 
         Pokemon[] team = trainer.Team;
-        if (team == null || team.Length == 0)
+        if (team == null)
         {
-            if (forPlayer)
-            {
-                myPokemonG = null;
-            }
-            else
-            {
-                otherPokemonG = null;
-            }
+            if (forPlayer) { myPokemonG = null; } else { otherPokemonG = null; }
             trainer.SetActiveIndex(-1);
             return null;
         }
 
         Pokemon selected = trainer.SelectAvailablePokemon(includeCurrentSlot);
-        if (forPlayer)
-        {
-            myPokemonG = selected;
-        }
-        else
-        {
-            otherPokemonG = selected;
-        }
-
+        if (forPlayer) { myPokemonG = selected; } else { otherPokemonG = selected; }
         return selected;
     }
 
     // =========================================================
-    // @ PokemonStart : Start/Continue/Exit 버튼 바인딩(람다 미사용)
+    // @ Start 씬 버튼 바인딩 + Continue 비활성 조건 보장
     // =========================================================
-    private void WireStartMenuButtons()
+    private void WireStartMenuButtonsIfStartScene(string sceneName)
     {
-        string scene = SceneManager.GetActiveScene().name;
-        if (scene == "PokemonStart")
-        {
-            if (StartBT != null)
-            {
-                StartBT.onClick.RemoveAllListeners();
-                StartBT.onClick.AddListener(NewGame);
-            }
-            if (ContinueBT != null)
-            {
-                ContinueBT.onClick.RemoveAllListeners();
-                ContinueBT.onClick.AddListener(ContinueGame);
-            }
-            if (ExitBT != null)
-            {
-                ExitBT.onClick.RemoveAllListeners();
-                ExitBT.onClick.AddListener(QuitGame);
-            }
+        if (sceneName != "PokemonStart") { return; }
 
-            UpdateContinueButtonAvailability();
+        if (StartBT != null)
+        {
+            StartBT.onClick.RemoveAllListeners();
+            StartBT.onClick.AddListener(NewGame);
         }
+        if (ContinueBT != null)
+        {
+            ContinueBT.onClick.RemoveAllListeners();
+            ContinueBT.onClick.AddListener(ContinueGame);
+        }
+        if (ExitBT != null)
+        {
+            ExitBT.onClick.RemoveAllListeners();
+            ExitBT.onClick.AddListener(QuitGame);
+        }
+
+        UpdateContinueButtonAvailability();
     }
 
     private void UpdateContinueButtonAvailability()
     {
-        if (ContinueBT == null)
-        {
-            return;
-        }
+        if (ContinueBT == null) { return; }
 
         bool hasSave = HasSaveData();
 
@@ -237,50 +262,57 @@ public class PokemonGamemanager : MonoBehaviour
             cg.interactable = hasSave;
             cg.blocksRaycasts = hasSave;
             cg.alpha = hasSave ? 1f : 0.5f;
-            return;
         }
-
-        if (ContinueBT.targetGraphic != null)
+        else
         {
-            Color color = ContinueBT.targetGraphic.color;
-            color.a = hasSave ? 1f : 0.5f;
-            ContinueBT.targetGraphic.color = color;
+            if (ContinueBT.targetGraphic != null)
+            {
+                Color color = ContinueBT.targetGraphic.color;
+                color.a = hasSave ? 1f : 0.5f;
+                ContinueBT.targetGraphic.color = color;
+            }
         }
     }
 
-    /// <summary> @ 포켓몬 선택(새 이름) </summary>
+    // =========================================================
+    // @ Pokemon 선택 처리 (인스펙터에 남아있는 기존 메서드명 유지)
+    // =========================================================
     public void OnPokemonClick(int index)
     {
         Pokemon choice = CreateByIndex((Pokemon.PokemonIndex)index, true);
         if (playerTrainer != null)
         {
-            if (!playerTrainer.TryAddPokemon(choice, out _))
+            int dummy;
+            if (!playerTrainer.TryAddPokemon(choice, out dummy))
             {
                 playerTrainer.ReplaceFirstPokemon(choice);
             }
-
             myPokemonG = playerTrainer.ActivePokemon;
         }
 
         EnsureEnemyTeamIfNeeded(false);
-
         UpdateChoiceUI();
         UpdateGoBattleActive();
     }
 
-    /// <summary> @ 인스펙터에서 잘못 입력된 기존 메서드명을 유지 </summary>
-    public void OnPokemonCilck(int index)
+    public void OnPokemonCilck(int index)  // 기존 철자 보존
     {
         OnPokemonClick(index);
     }
 
-    /// <summary> @ 플레이어 팀이 가득 찼다면 적 팀을 자동으로 구성 </summary>
     private void EnsureEnemyTeamIfNeeded(bool allowBuildEarly)
     {
-        // @ 이미 만들어졌으면 패스
         if (_enemyBuiltOnce) { return; }
 
-        bool playerFull = playerTrainer != null && playerTrainer.IsTeamFull();
+        bool playerFull = false;
+        if (playerTrainer != null)
+        {
+            if (playerTrainer.IsTeamFull())
+            {
+                playerFull = true;
+            }
+        }
+
         if (playerFull)
         {
             BuildRandomEnemyTeam3();
@@ -288,7 +320,6 @@ public class PokemonGamemanager : MonoBehaviour
             return;
         }
 
-        // @ 초기 진입 시에도 적 팀을 미리 만들어 둘 수 있음(옵션)
         if (allowBuildEarly)
         {
             BuildRandomEnemyTeam3();
@@ -297,63 +328,70 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     // =========================================================
-    // @ GoBattle
+    // @ goBattle: 런타임 바인딩 + 표시 상태 관리 + 클릭시 전환
     // =========================================================
-    /// <summary> @ 인스펙터에 연결되어 있던 기존 함수 이름 유지 </summary>
-    public void BattleStart()
+    private void WireGoBattleButtonIfChoicesScene(string sceneName)
     {
-        SceneManager.LoadScene("PokemonChoices");
-    }
+        if (sceneName != "PokemonChoices") { return; }
 
-    /// <summary> @ goBattle 눌렀을 때 처리 </summary>
-    public void OnClickGoBattle()
-    {
-        bool playerReady = playerTrainer != null && playerTrainer.IsTeamFull() && playerTrainer.HasHealthyPokemon();
-        bool enemyReady = enemyTrainer != null && enemyTrainer.IsTeamFull() && enemyTrainer.HasHealthyPokemon();
-
-        if (playerReady && enemyReady)
+        // @ 안전 바인딩: 인스펙터에 없더라도 동작 보장
+        if (goBattleButton == null && battleStart != null)
         {
-            Pokemon playerActive = SelectAvailablePokemon(true, true);
-            Pokemon enemyActive = SelectAvailablePokemon(false, true);
-
-            if (playerActive != null && enemyActive != null)
+            Button b = battleStart.GetComponent<Button>();
+            if (b != null)
             {
-                SceneManager.LoadScene("PokemonBattle");
-                return;
+                goBattleButton = b;
             }
         }
 
-        if (titleText != null)
+        if (goBattleButton != null)
         {
-            if (!playerReady)
-            {
-                titleText.text = "전투에 나설 수 있는 내 팀이 필요해.";
-            }
-            else if (!enemyReady)
-            {
-                titleText.text = "적 팀 준비가 끝날 때까지 기다려 줘.";
-            }
-            else
-            {
-                titleText.text = "전투를 시작할 포켓몬이 없습니다.";
-            }
+            goBattleButton.onClick.RemoveAllListeners();
+            goBattleButton.onClick.AddListener(OnClickGoBattle);
         }
     }
 
-    /// <summary> @ goBattle 버튼 표시 여부 결정(SetActive) </summary>
     private void UpdateGoBattleActive()
     {
         bool show = false;
 
-        bool playerReady = playerTrainer != null && playerTrainer.IsTeamFull() && playerTrainer.HasHealthyPokemon();
+        bool playerReady = false;
+        if (playerTrainer != null)
+        {
+            if (playerTrainer.IsTeamFull())
+            {
+                if (playerTrainer.HasHealthyPokemon())
+                {
+                    playerReady = true;
+                }
+            }
+        }
+
         if (playerReady)
         {
-            bool enemyReady = enemyTrainer != null && enemyTrainer.IsTeamFull() && enemyTrainer.HasHealthyPokemon();
+            bool enemyReady = false;
+            if (enemyTrainer != null)
+            {
+                if (enemyTrainer.IsTeamFull())
+                {
+                    if (enemyTrainer.HasHealthyPokemon())
+                    {
+                        enemyReady = true;
+                    }
+                }
+            }
+
             if (enemyReady)
             {
                 Pokemon playerActive = SelectAvailablePokemon(true, true);
                 Pokemon enemyActive = SelectAvailablePokemon(false, true);
-                show = (playerActive != null && enemyActive != null);
+                if (playerActive != null)
+                {
+                    if (enemyActive != null)
+                    {
+                        show = true;
+                    }
+                }
             }
         }
 
@@ -375,28 +413,79 @@ public class PokemonGamemanager : MonoBehaviour
         }
     }
 
-    private static Pokemon CreateByIndex(Pokemon.PokemonIndex idx, bool isPlayer)
+    /// <summary> @ 인스펙터에 연결되어 있던 기존 함수 이름 유지 @ 잘못된 씬 로드를 교정 </summary>
+    public void BattleStart()
     {
-        Pokemon p = null;
-        if (idx == Pokemon.PokemonIndex.pikach)
+        // @ 과거에는 PokemonChoices로 재로딩되어 전환이 안 되는 문제가 있었음
+        // @ 이제는 동일한 진입점을 사용하여 전투씬 전환을 보장
+        OnClickGoBattle();
+    }
+
+    /// <summary> @ goBattle 눌렀을 때 처리: 조건 재검증 후 전투씬으로 전환 </summary>
+    public void OnClickGoBattle()
+    {
+        bool playerReady = false;
+        if (playerTrainer != null)
         {
-            p = new Pika();
-        }
-        else if (idx == Pokemon.PokemonIndex.paily)
-        {
-            p = new Paily();
-        }
-        else if (idx == Pokemon.PokemonIndex.goBook)
-        {
-            p = new GoBook();
-        }
-        else
-        {
-            p = new Esang();
+            if (playerTrainer.IsTeamFull())
+            {
+                if (playerTrainer.HasHealthyPokemon())
+                {
+                    playerReady = true;
+                }
+            }
         }
 
-        PokemonBattleManager.ConfigureAtlasForSide(p, isPlayer);
-        return p;
+        bool enemyReady = false;
+        if (enemyTrainer != null)
+        {
+            if (enemyTrainer.IsTeamFull())
+            {
+                if (enemyTrainer.HasHealthyPokemon())
+                {
+                    enemyReady = true;
+                }
+            }
+        }
+
+        if (playerReady)
+        {
+            if (enemyReady)
+            {
+                Pokemon playerActive = SelectAvailablePokemon(true, true);
+                Pokemon enemyActive = SelectAvailablePokemon(false, true);
+
+                if (playerActive != null)
+                {
+                    if (enemyActive != null)
+                    {
+                        // @ 전투 진입 직전 저장 플래그를 표준화
+                        MarkSaveFlag();
+                        SceneManager.LoadScene("PokemonBattle");
+                        return;
+                    }
+                }
+            }
+        }
+
+        if (titleText != null)
+        {
+            if (!playerReady)
+            {
+                titleText.text = "전투에 나설 수 있는 내 팀이 필요해.";
+            }
+            else
+            {
+                if (!enemyReady)
+                {
+                    titleText.text = "적 팀 준비가 끝날 때까지 기다려 줘.";
+                }
+                else
+                {
+                    titleText.text = "전투를 시작할 포켓몬이 없습니다.";
+                }
+            }
+        }
     }
 
     // =========================================================
@@ -404,38 +493,30 @@ public class PokemonGamemanager : MonoBehaviour
     // =========================================================
     private void EnsureSettingPrefabUnderCanvas()
     {
-        // @ 씬 내 Canvas 찾기
         Canvas c = GameObject.FindObjectOfType<Canvas>();
         if (c == null)
         {
             return;
         }
 
-        // @ 이미 Setting 인스턴스가 있으면 그걸 사용
         if (settingsRef != null)
         {
-            // @ 부모 지정: worldPositionStays=false 로 UI 좌표계 유지
             settingsRef.transform.SetParent(c.transform, false);
 
-            // @ uiRoot 자동 할당
             if (settingsRef.uiRoot == null)
             {
                 settingsRef.uiRoot = c.transform;
-                // @ 런타임 중앙 배치
+
                 if (settingsRef.settingsPanel != null)
                 {
                     Transform t = settingsRef.settingsPanel.transform;
                     Vector3 p = t.localPosition;
-                    p.x = 0f;
-                    p.y = 0f;
-                    p.z = 0f;
+                    p.x = 0f; p.y = 0f; p.z = 0f;
                     t.localPosition = p;
                 }
-                // @ 최상단 정렬(중첩 캔버스)
                 settingsRef.EnsureNestedCanvasTopmostAtRuntime(settingsSortOrder);
             }
 
-            // @ 패널 시작 위치 중앙
             if (settingsRef.settingsPanel != null)
             {
                 Transform t = settingsRef.settingsPanel.transform;
@@ -447,7 +528,6 @@ public class PokemonGamemanager : MonoBehaviour
                 settingsRef.initialPosY = 0f;
             }
 
-            // @ Nested Canvas 정렬 무시 및 순서 보장
             Canvas sc = settingsRef.GetComponent<Canvas>();
             if (sc == null)
             {
@@ -460,7 +540,6 @@ public class PokemonGamemanager : MonoBehaviour
             return;
         }
 
-        // @ 프리팹으로부터 새 인스턴스 생성
         GameObject go = null;
         if (settingPrefab != null)
         {
@@ -471,32 +550,24 @@ public class PokemonGamemanager : MonoBehaviour
             return;
         }
         go.name = "Setting";
-
-        // @ 부모 지정: worldPositionStays=false 로 UI 좌표계 유지
         go.transform.SetParent(c.transform, false);
 
-        // @ Setting 컴포넌트 확보
         Setting exist = go.GetComponent<Setting>();
         if (exist == null)
         {
             exist = go.AddComponent<Setting>();
             exist.settingsSortOrder = settingsSortOrder;
         }
-        // @ 런타임 중앙 배치
+
         if (exist.settingsPanel != null)
         {
             Transform t = exist.settingsPanel.transform;
             Vector3 p = t.localPosition;
-            p.x = 0f;
-            p.y = 0f;
-            p.z = 0f;
+            p.x = 0f; p.y = 0f; p.z = 0f;
             t.localPosition = p;
         }
-        // @ 최상단 정렬(중첩 캔버스)
         exist.EnsureNestedCanvasTopmostAtRuntime(settingsSortOrder);
 
-
-        // @ uiRoot 자동 할당
         if (settingsUiRootHint != null)
         {
             exist.uiRoot = settingsUiRootHint;
@@ -506,7 +577,6 @@ public class PokemonGamemanager : MonoBehaviour
             exist.uiRoot = c.transform;
         }
 
-        // @ 패널 시작 위치 중앙
         if (exist.settingsPanel != null)
         {
             Transform t = exist.settingsPanel.transform;
@@ -518,7 +588,6 @@ public class PokemonGamemanager : MonoBehaviour
             exist.initialPosY = 0f;
         }
 
-        // @ Nested Canvas 정렬 무시 및 순서 보장
         Canvas goCanvas = go.GetComponent<Canvas>();
         if (goCanvas == null)
         {
@@ -528,7 +597,6 @@ public class PokemonGamemanager : MonoBehaviour
         goCanvas.overrideSorting = true;
         goCanvas.sortingOrder = settingsSortOrder;
 
-        // @ 외부에서 settingsRef 사용 가능하도록 보관
         settingsRef = exist;
     }
 
@@ -560,6 +628,9 @@ public class PokemonGamemanager : MonoBehaviour
 
         string json = JsonUtility.ToJson(dto, true);
         File.WriteAllText(SavePath, json);
+
+        // @ 저장 파일과 PlayerPrefs 플래그를 동시에 세팅하여 기준을 일치화
+        MarkSaveFlag();
     }
 
     public void ContinueGame()
@@ -569,6 +640,7 @@ public class PokemonGamemanager : MonoBehaviour
             UpdateContinueButtonAvailability();
             return;
         }
+
         string json = File.ReadAllText(SavePath);
         SaveDTO dto = JsonUtility.FromJson<SaveDTO>(json);
         ApplySave(dto);
@@ -630,10 +702,7 @@ public class PokemonGamemanager : MonoBehaviour
 
     private static PokemonDTO ToDTO(Pokemon p)
     {
-        if (p == null)
-        {
-            return null;
-        }
+        if (p == null) { return null; }
         PokemonDTO d = new PokemonDTO();
         d.idx = (int)p.index;
         d.type = (int)p.type;
@@ -662,17 +731,9 @@ public class PokemonGamemanager : MonoBehaviour
 
     public void NewGame()
     {
-        if (File.Exists(SavePath))
-        {
-            try
-            {
-                File.Delete(SavePath);
-            }
-            catch
-            {
-                // @ 삭제 실패해도 무시
-            }
-        }
+        // @ 세이브 완전 삭제: 파일 + 플래그 동시 정리
+        DeleteSaveFileIfExists();
+        ClearSaveFlag();
 
         if (playerTrainer == null)
         {
@@ -720,4 +781,37 @@ public class PokemonGamemanager : MonoBehaviour
     public void OnClickSettingsResume() { if (settingsRef != null) { settingsRef.OnClickSettingsResume(); } }
     public void OnClickSettingsRestart() { if (settingsRef != null) { settingsRef.OnClickSettingsRestart(); } }
     public void OnClickSettingsExitToStart() { if (settingsRef != null) { settingsRef.OnClickSettingsExitToStart(); } }
+
+    // =========================================================
+    // @ 유틸
+    // =========================================================
+    private static Pokemon CreateByIndex(Pokemon.PokemonIndex idx, bool isPlayer)
+    {
+        Pokemon p = null;
+        if (idx == Pokemon.PokemonIndex.pikach)
+        {
+            p = new Pika();
+        }
+        else
+        {
+            if (idx == Pokemon.PokemonIndex.paily)
+            {
+                p = new Paily();
+            }
+            else
+            {
+                if (idx == Pokemon.PokemonIndex.goBook)
+                {
+                    p = new GoBook();
+                }
+                else
+                {
+                    p = new Esang();
+                }
+            }
+        }
+
+        PokemonBattleManager.ConfigureAtlasForSide(p, isPlayer);
+        return p;
+    }
 }
