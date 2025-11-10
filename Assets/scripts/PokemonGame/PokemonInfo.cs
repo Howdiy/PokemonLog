@@ -95,14 +95,14 @@ public class PokemonInfo : MonoBehaviour
     {
         if (targetPokemon == null) { return; }
         LoadAtlasIfNeeded(targetPokemon.atlasResourcePath);
-        SetSpriteFromAtlas(targetPokemon.spriteKeyAtk);
+        SetSpriteFromAtlas(targetPokemon.spriteKeyAttack);
     }
 
     public void ApplySkillPose()
     {
         if (targetPokemon == null) { return; }
         LoadAtlasIfNeeded(targetPokemon.atlasResourcePath);
-        SetSpriteFromAtlas(targetPokemon.spriteKeyDef);
+        SetSpriteFromAtlas(targetPokemon.spriteKeySkill);
     }
 
     // ========= 유틸 =========

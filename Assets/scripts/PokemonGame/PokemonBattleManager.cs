@@ -9,6 +9,7 @@ public class PokemonBattleManager : MonoBehaviour
     // 싱글톤 인스턴스 ---------------------------------------------------
     public static PokemonBattleManager instance;
     public static PokemonBattleManager Instance { get; private set; }
+    private static int _pendingRound = 1;
 
     // 설정 ---------------------------------------------------------------
     public Setting settingsRef;
@@ -63,6 +64,8 @@ public class PokemonBattleManager : MonoBehaviour
         Instance = this;
         instance = this;
         _isInitialized = false;
+
+        roundIndex = Mathf.Max(1, _pendingRound);
 
         InitializeBattleState();
     }
@@ -137,6 +140,7 @@ public class PokemonBattleManager : MonoBehaviour
         BindCommandButtons();
         BindSkillButtons();
 
+        _pendingRound = roundIndex;
         _isInitialized = true;
     }
 
@@ -691,33 +695,29 @@ public class PokemonBattleManager : MonoBehaviour
                 pokemon.atlasResourcePath = "PikaSpriteAtlas";
                 pokemon.spriteKeyChoice = "PIKACH";
                 pokemon.spriteKeyBattleIdle = "PIKA2";
-                pokemon.spriteKeyAtk = "PIKA4";
-                pokemon.spriteKeyDef = "PIKA3";
-                pokemon.spriteKeyHp = "PIKA1";
+                pokemon.spriteKeyAttack = "PIKA4";
+                pokemon.spriteKeySkill = "PIKA3";
                 break;
             case Pokemon.PokemonIndex.paily:
                 pokemon.atlasResourcePath = "PailySpriteAtlas";
                 pokemon.spriteKeyChoice = "PAILY";
                 pokemon.spriteKeyBattleIdle = "PAILY2";
-                pokemon.spriteKeyAtk = "PAILY4";
-                pokemon.spriteKeyDef = "PAILY3";
-                pokemon.spriteKeyHp = "PAILY1";
+                pokemon.spriteKeyAttack = "PAILY4";
+                pokemon.spriteKeySkill = "PAILY3";
                 break;
             case Pokemon.PokemonIndex.goBook:
                 pokemon.atlasResourcePath = "GoBookSpriteAtlas";
                 pokemon.spriteKeyChoice = "GOBOOK1";
                 pokemon.spriteKeyBattleIdle = "GOBOOK2";
-                pokemon.spriteKeyAtk = "GOBOOK4";
-                pokemon.spriteKeyDef = "GOBOOK3";
-                pokemon.spriteKeyHp = "GOBOOK1";
+                pokemon.spriteKeyAttack = "GOBOOK4";
+                pokemon.spriteKeySkill = "GOBOOK3";
                 break;
             default:
                 pokemon.atlasResourcePath = "EsangSpriteAtlas";
                 pokemon.spriteKeyChoice = "ESANGSEE";
                 pokemon.spriteKeyBattleIdle = "ESANG2";
-                pokemon.spriteKeyAtk = "ESANG4";
-                pokemon.spriteKeyDef = "ESANG3";
-                pokemon.spriteKeyHp = "ESANG1";
+                pokemon.spriteKeyAttack = "ESANG4";
+                pokemon.spriteKeySkill = "ESANG3";
                 break;
         }
     }
@@ -725,6 +725,7 @@ public class PokemonBattleManager : MonoBehaviour
     private IEnumerator StartNextRoundFlow()
     {
         roundIndex += 1;
+        _pendingRound = roundIndex;
         if (roundText != null)
         {
             roundText.text = "Round " + roundIndex.ToString();
@@ -737,17 +738,19 @@ public class PokemonBattleManager : MonoBehaviour
 
     public static int GetRoundSnapshot()
     {
-        return Instance != null ? Instance.roundIndex : 1;
+        return Instance != null ? Instance.roundIndex : _pendingRound;
     }
 
     public static void SetRoundFromSave(int round)
     {
+        _pendingRound = Mathf.Max(1, round);
+
         if (Instance == null)
         {
             return;
         }
 
-        Instance.roundIndex = Mathf.Max(1, round);
+        Instance.roundIndex = _pendingRound;
         if (Instance.roundText != null)
         {
             Instance.roundText.text = "Round " + Instance.roundIndex.ToString();

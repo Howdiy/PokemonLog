@@ -33,11 +33,9 @@ public class PokemonGamemanager : MonoBehaviour
     public Button ContinueBT;
     public Button ExitBT;
 
-    // @ 선택 결과 및 팀(객체 배열 유지)
-    public static Pokemon[] playerTeam3 = new Pokemon[3];
-    public static Pokemon[] enemyTeam3 = new Pokemon[3];
-    public static int playerActiveIndex = 0;
-    public static int enemyActiveIndex = 0;
+    // @ 선택 결과 및 팀(트레이너가 관리)
+    public static PokemonTrainer playerTrainer = new PokemonTrainer("Player", 3);
+    public static PokemonTrainer enemyTrainer = new PokemonTrainer("Enemy", 3);
 
     // @ 배틀로 넘길 포인터
     public static Pokemon myPokemonG;
@@ -90,9 +88,6 @@ public class PokemonGamemanager : MonoBehaviour
     {
         // @ Setting 프리팹 인스턴스 생성·부모 지정·uiRoot·정렬·초기위치 보정
         EnsureSettingPrefabUnderCanvas();
-
-        // @ 필요시 이미지 클릭을 버튼으로 보장(현재 미사용이므로 주석 유지)
-        WireChoiceImagesAsButtons();
     }
 
     /// <summary> @ 시작 시 선택 씬이라면 초기 goBattle 표시/적팀 준비 </summary>
@@ -112,7 +107,7 @@ public class PokemonGamemanager : MonoBehaviour
     {
         if (titleText != null)
         {
-            int filled = CountFilled(playerTeam3);
+            int filled = playerTrainer != null ? playerTrainer.CountFilled() : 0;
             titleText.text = "포켓몬 선택\n" +
                              "바깥은 혼자 돌아다니긴 위험하단다\n" +
                              "이 아이들 중 하나를 데려가렴\n" +
@@ -129,121 +124,71 @@ public class PokemonGamemanager : MonoBehaviour
         pool.Add(Pokemon.PokemonIndex.goBook);
         pool.Add(Pokemon.PokemonIndex.eSang);
 
-        enemyTeam3 = new Pokemon[3];
+        if (enemyTrainer == null)
+        {
+            enemyTrainer = new PokemonTrainer("Enemy", 3);
+        }
 
-        for (int i = 0; i < 3; i++)
+        enemyTrainer.ClearTeam();
+
+        for (int i = 0; i < enemyTrainer.TeamSize && i < 3; i++)
         {
             if (pool.Count > 0)
             {
                 int r = Random.Range(0, pool.Count);
                 Pokemon.PokemonIndex pick = pool[r];
                 pool.RemoveAt(r);
-                enemyTeam3[i] = CreateByIndex(pick);
+                Pokemon pokemon = CreateByIndex(pick, false);
+                enemyTrainer.SetPokemonAt(i, pokemon);
             }
         }
 
-        enemyActiveIndex = 0;
-    }
-
-    /// <summary> @ 팀 배열의 첫 null 인덱스 반환(없으면 -1) </summary>
-    public static int FirstNullIndex(Pokemon[] arr)
-    {
-        if (arr == null) { return 0; }
-        for (int i = 0; i < arr.Length; i++)
-        {
-            if (arr[i] == null) { return i; }
-        }
-        return -1;
-    }
-
-    /// <summary> @ 팀이 3칸 모두 찼는지 검사 </summary>
-    private static bool TeamIsFull(Pokemon[] arr)
-    {
-        int idx = FirstNullIndex(arr);
-        if (idx < 0) { return true; }
-        return false;
-    }
-
-    /// <summary> @ 채워진 수 카운트 </summary>
-    private static int CountFilled(Pokemon[] arr)
-    {
-        int c = 0;
-        if (arr != null)
-        {
-            for (int i = 0; i < arr.Length; i++)
-            {
-                if (arr[i] != null) { c = c + 1; }
-            }
-        }
-        return c;
+        otherPokemonG = enemyTrainer.ActivePokemon;
     }
 
     /// <summary> @ 인덱스로 포켓몬 생성 </summary>
-    private static Pokemon CreateByIndex(Pokemon.PokemonIndex idx)
-    {
-        if (idx == Pokemon.PokemonIndex.pikach) { return new Pika(); }
-        if (idx == Pokemon.PokemonIndex.paily) { return new Paily(); }
-        if (idx == Pokemon.PokemonIndex.goBook) { return new GoBook(); }
-        return new Esang();
-    }
-
     public static Pokemon SelectAvailablePokemon(bool forPlayer, bool includeCurrentSlot)
     {
-        Pokemon[] team = forPlayer ? playerTeam3 : enemyTeam3;
-        if (team == null || team.Length == 0)
+        PokemonTrainer trainer = forPlayer ? playerTrainer : enemyTrainer;
+        if (trainer == null)
         {
             if (forPlayer)
             {
-                playerActiveIndex = -1;
                 myPokemonG = null;
             }
             else
             {
-                enemyActiveIndex = -1;
                 otherPokemonG = null;
             }
             return null;
         }
 
-        int length = team.Length;
-        int currentIndex = forPlayer ? playerActiveIndex : enemyActiveIndex;
-        if (currentIndex < 0 || currentIndex >= length)
+        Pokemon[] team = trainer.Team;
+        if (team == null || team.Length == 0)
         {
-            currentIndex = 0;
-        }
-
-        int searchStart = includeCurrentSlot ? currentIndex : ((currentIndex + 1) % length);
-        for (int offset = 0; offset < length; offset++)
-        {
-            int idx = (searchStart + offset) % length;
-            Pokemon candidate = team[idx];
-            if (candidate != null && candidate.Hp > 0)
+            if (forPlayer)
             {
-                if (forPlayer)
-                {
-                    playerActiveIndex = idx;
-                    myPokemonG = candidate;
-                }
-                else
-                {
-                    enemyActiveIndex = idx;
-                    otherPokemonG = candidate;
-                }
-                return candidate;
+                myPokemonG = null;
             }
+            else
+            {
+                otherPokemonG = null;
+            }
+            trainer.SetActiveIndex(-1);
+            return null;
         }
 
+        Pokemon selected = trainer.SelectAvailablePokemon(includeCurrentSlot);
         if (forPlayer)
         {
-            playerActiveIndex = -1;
-            myPokemonG = null;
+            myPokemonG = selected;
         }
         else
         {
-            enemyActiveIndex = -1;
-            otherPokemonG = null;
+            otherPokemonG = selected;
         }
-        return null;
+
+        return selected;
     }
 
     // =========================================================
@@ -303,91 +248,30 @@ public class PokemonGamemanager : MonoBehaviour
         }
     }
 
-    // =========================================================
-    // @ PokemonChoices : 이미지 클릭을 버튼으로 보장(람다 미사용)
-    // =========================================================
-    private void WireChoiceImagesAsButtons()
-    {
-        // 사용하지 않는 이미지 버튼 자동 바인딩은 주석으로 유지
-        //AttachButtonIfMissingAndBind(Pika, OnClickPickPika);
-        //AttachButtonIfMissingAndBind(Paily, OnClickPickPaily);
-        //AttachButtonIfMissingAndBind(GoBook, OnClickPickGoBook);
-        //AttachButtonIfMissingAndBind(eSang, OnClickPickEsang);
-    }
-
-    private void AttachButtonIfMissingAndBind(Image img, UnityEngine.Events.UnityAction handler)
-    {
-        if (img == null)
-        {
-            return;
-        }
-
-        Button b = img.GetComponent<Button>();
-        if (b == null)
-        {
-            b = img.gameObject.AddComponent<Button>();
-            ColorBlock cb = b.colors;
-            cb.colorMultiplier = 1f;
-            b.colors = cb;
-            Navigation nav = b.navigation;
-            nav.mode = Navigation.Mode.Automatic;
-            b.navigation = nav;
-            b.targetGraphic = img;
-        }
-
-        if (b != null)
-        {
-            b.onClick.RemoveAllListeners();
-            b.onClick.AddListener(handler);
-        }
-    }
-
-    // =========================================================
-    // @ PokemonChoices : 선택 처리
-    // =========================================================
-    private void OnClickPickPika()
-    {
-        OnPokemonClick((int)Pokemon.PokemonIndex.pikach);
-    }
-    private void OnClickPickPaily()
-    {
-        OnPokemonClick((int)Pokemon.PokemonIndex.paily);
-    }
-    private void OnClickPickGoBook()
-    {
-        OnPokemonClick((int)Pokemon.PokemonIndex.goBook);
-    }
-    private void OnClickPickEsang()
-    {
-        OnPokemonClick((int)Pokemon.PokemonIndex.eSang);
-    }
-    
     /// <summary> @ 포켓몬 선택(새 이름) </summary>
     public void OnPokemonClick(int index)
     {
-        Pokemon choice = CreateByIndex((Pokemon.PokemonIndex)index);
-
-        int empty = FirstNullIndex(playerTeam3);
-        if (empty >= 0)
+        Pokemon choice = CreateByIndex((Pokemon.PokemonIndex)index, true);
+        if (playerTrainer != null)
         {
-            playerTeam3[empty] = choice;
-            if (empty == 0)
+            if (!playerTrainer.TryAddPokemon(choice, out _))
             {
-                playerActiveIndex = 0;
+                playerTrainer.ReplaceFirstPokemon(choice);
             }
-        }
-        else
-        {
-            // @ 이미 3칸이 찼다면 첫 칸 교체
-            playerTeam3[0] = choice;
-            playerActiveIndex = 0;
+
+            myPokemonG = playerTrainer.ActivePokemon;
         }
 
-        // @ 플레이어 팀이 다 찼다면 적 팀도 준비되어야 함
         EnsureEnemyTeamIfNeeded(false);
 
         UpdateChoiceUI();
         UpdateGoBattleActive();
+    }
+
+    /// <summary> @ 인스펙터에서 잘못 입력된 기존 메서드명을 유지 </summary>
+    public void OnPokemonCilck(int index)
+    {
+        OnPokemonClick(index);
     }
 
     /// <summary> @ 플레이어 팀이 가득 찼다면 적 팀을 자동으로 구성 </summary>
@@ -396,7 +280,7 @@ public class PokemonGamemanager : MonoBehaviour
         // @ 이미 만들어졌으면 패스
         if (_enemyBuiltOnce) { return; }
 
-        bool playerFull = TeamIsFull(playerTeam3);
+        bool playerFull = playerTrainer != null && playerTrainer.IsTeamFull();
         if (playerFull)
         {
             BuildRandomEnemyTeam3();
@@ -418,34 +302,41 @@ public class PokemonGamemanager : MonoBehaviour
     /// <summary> @ 인스펙터에 연결되어 있던 기존 함수 이름 유지 </summary>
     public void BattleStart()
     {
-        OnClickGoBattle();
+        SceneManager.LoadScene("PokemonChoices");
     }
 
     /// <summary> @ goBattle 눌렀을 때 처리 </summary>
     public void OnClickGoBattle()
     {
-        // @ 안전 가드: 두 팀 모두 3마리여야 함
-        bool playerFull = TeamIsFull(playerTeam3);
-        if (playerFull)
-        {
-            bool enemyFull = TeamIsFull(enemyTeam3);
-            if (enemyFull)
-            {
-                Pokemon playerActive = SelectAvailablePokemon(true, true);
-                Pokemon enemyActive = SelectAvailablePokemon(false, true);
+        bool playerReady = playerTrainer != null && playerTrainer.IsTeamFull() && playerTrainer.HasHealthyPokemon();
+        bool enemyReady = enemyTrainer != null && enemyTrainer.IsTeamFull() && enemyTrainer.HasHealthyPokemon();
 
-                if (playerActive != null && enemyActive != null)
-                {
-                    SceneManager.LoadScene("PokemonBattle");
-                    return;
-                }
+        if (playerReady && enemyReady)
+        {
+            Pokemon playerActive = SelectAvailablePokemon(true, true);
+            Pokemon enemyActive = SelectAvailablePokemon(false, true);
+
+            if (playerActive != null && enemyActive != null)
+            {
+                SceneManager.LoadScene("PokemonBattle");
+                return;
             }
         }
 
-        // @ 미충족 시 안내
         if (titleText != null)
         {
-            titleText.text = "양 팀이 모두 준비되어야 전투를 시작할 수 있어.";
+            if (!playerReady)
+            {
+                titleText.text = "전투에 나설 수 있는 내 팀이 필요해.";
+            }
+            else if (!enemyReady)
+            {
+                titleText.text = "적 팀 준비가 끝날 때까지 기다려 줘.";
+            }
+            else
+            {
+                titleText.text = "전투를 시작할 포켓몬이 없습니다.";
+            }
         }
     }
 
@@ -454,13 +345,15 @@ public class PokemonGamemanager : MonoBehaviour
     {
         bool show = false;
 
-        bool playerFull = TeamIsFull(playerTeam3);
-        if (playerFull)
+        bool playerReady = playerTrainer != null && playerTrainer.IsTeamFull() && playerTrainer.HasHealthyPokemon();
+        if (playerReady)
         {
-            bool enemyFull = TeamIsFull(enemyTeam3);
-            if (enemyFull)
+            bool enemyReady = enemyTrainer != null && enemyTrainer.IsTeamFull() && enemyTrainer.HasHealthyPokemon();
+            if (enemyReady)
             {
-                show = true;
+                Pokemon playerActive = SelectAvailablePokemon(true, true);
+                Pokemon enemyActive = SelectAvailablePokemon(false, true);
+                show = (playerActive != null && enemyActive != null);
             }
         }
 
@@ -469,6 +362,15 @@ public class PokemonGamemanager : MonoBehaviour
             if (battleStart.activeSelf != show)
             {
                 battleStart.SetActive(show);
+            }
+        }
+
+        if (goBattleButton != null)
+        {
+            goBattleButton.interactable = show;
+            if (goBattleButton.gameObject.activeSelf != show)
+            {
+                goBattleButton.gameObject.SetActive(show);
             }
         }
     }
@@ -480,39 +382,20 @@ public class PokemonGamemanager : MonoBehaviour
         {
             p = new Pika();
         }
-        else
+        else if (idx == Pokemon.PokemonIndex.paily)
         {
-            if (idx == Pokemon.PokemonIndex.paily)
-            {
-                p = new Paily();
-            }
-            else
-            {
-                if (idx == Pokemon.PokemonIndex.goBook)
-                {
-                    p = new GoBook();
-                }
-                else
-                {
-                    p = new Esang();
-                }
-            }
+            p = new Paily();
         }
-
-        if (p == null)
+        else if (idx == Pokemon.PokemonIndex.goBook)
         {
-            p = new Pika();
-        }
-
-        if (isPlayer)
-        {
-            // @ 추가 설정이 필요한 경우 여기에
+            p = new GoBook();
         }
         else
         {
-            // @ 적 포켓몬 설정이 필요한 경우 여기에
+            p = new Esang();
         }
 
+        PokemonBattleManager.ConfigureAtlasForSide(p, isPlayer);
         return p;
     }
 
@@ -658,16 +541,19 @@ public class PokemonGamemanager : MonoBehaviour
         dto.player = new PokemonDTO[3];
         dto.enemy = new PokemonDTO[3];
 
-        dto.player[0] = (playerTeam3 != null && playerTeam3.Length > 0 && playerTeam3[0] != null) ? ToDTO(playerTeam3[0]) : null;
-        dto.player[1] = (playerTeam3 != null && playerTeam3.Length > 1 && playerTeam3[1] != null) ? ToDTO(playerTeam3[1]) : null;
-        dto.player[2] = (playerTeam3 != null && playerTeam3.Length > 2 && playerTeam3[2] != null) ? ToDTO(playerTeam3[2]) : null;
+        Pokemon[] playerTeam = (playerTrainer != null) ? playerTrainer.Team : null;
+        Pokemon[] enemyTeam = (enemyTrainer != null) ? enemyTrainer.Team : null;
 
-        dto.playerActive = playerActiveIndex;
+        dto.player[0] = (playerTeam != null && playerTeam.Length > 0 && playerTeam[0] != null) ? ToDTO(playerTeam[0]) : null;
+        dto.player[1] = (playerTeam != null && playerTeam.Length > 1 && playerTeam[1] != null) ? ToDTO(playerTeam[1]) : null;
+        dto.player[2] = (playerTeam != null && playerTeam.Length > 2 && playerTeam[2] != null) ? ToDTO(playerTeam[2]) : null;
 
-        dto.enemy[0] = (enemyTeam3 != null && enemyTeam3.Length > 0 && enemyTeam3[0] != null) ? ToDTO(enemyTeam3[0]) : null;
-        dto.enemy[1] = (enemyTeam3 != null && enemyTeam3.Length > 1 && enemyTeam3[1] != null) ? ToDTO(enemyTeam3[1]) : null;
-        dto.enemy[2] = (enemyTeam3 != null && enemyTeam3.Length > 2 && enemyTeam3[2] != null) ? ToDTO(enemyTeam3[2]) : null;
-        dto.enemyActive = enemyActiveIndex;
+        dto.playerActive = (playerTrainer != null) ? playerTrainer.ActiveIndex : -1;
+
+        dto.enemy[0] = (enemyTeam != null && enemyTeam.Length > 0 && enemyTeam[0] != null) ? ToDTO(enemyTeam[0]) : null;
+        dto.enemy[1] = (enemyTeam != null && enemyTeam.Length > 1 && enemyTeam[1] != null) ? ToDTO(enemyTeam[1]) : null;
+        dto.enemy[2] = (enemyTeam != null && enemyTeam.Length > 2 && enemyTeam[2] != null) ? ToDTO(enemyTeam[2]) : null;
+        dto.enemyActive = (enemyTrainer != null) ? enemyTrainer.ActiveIndex : -1;
 
         dto.round = PokemonBattleManager.GetRoundSnapshot();
         dto.sceneName = sceneName;
@@ -707,27 +593,37 @@ public class PokemonGamemanager : MonoBehaviour
 
     private static void ApplySave(SaveDTO dto)
     {
-        playerTeam3 = new Pokemon[3];
-        enemyTeam3 = new Pokemon[3];
-        _enemyBuiltOnce = false;
+        if (playerTrainer == null)
+        {
+            playerTrainer = new PokemonTrainer("Player", 3);
+        }
+        if (enemyTrainer == null)
+        {
+            enemyTrainer = new PokemonTrainer("Enemy", 3);
+        }
 
+        Pokemon[] restoredPlayer = new Pokemon[3];
         if (dto.player != null)
         {
-            if (dto.player.Length > 0 && dto.player[0] != null) { playerTeam3[0] = FromDTO(dto.player[0], true); }
-            if (dto.player.Length > 1 && dto.player[1] != null) { playerTeam3[1] = FromDTO(dto.player[1], true); }
-            if (dto.player.Length > 2 && dto.player[2] != null) { playerTeam3[2] = FromDTO(dto.player[2], true); }
+            if (dto.player.Length > 0 && dto.player[0] != null) { restoredPlayer[0] = FromDTO(dto.player[0], true); }
+            if (dto.player.Length > 1 && dto.player[1] != null) { restoredPlayer[1] = FromDTO(dto.player[1], true); }
+            if (dto.player.Length > 2 && dto.player[2] != null) { restoredPlayer[2] = FromDTO(dto.player[2], true); }
         }
+        playerTrainer.LoadTeam(restoredPlayer, dto.playerActive);
 
+        Pokemon[] restoredEnemy = new Pokemon[3];
         if (dto.enemy != null)
         {
-            if (dto.enemy.Length > 0 && dto.enemy[0] != null) { enemyTeam3[0] = FromDTO(dto.enemy[0], false); }
-            if (dto.enemy.Length > 1 && dto.enemy[1] != null) { enemyTeam3[1] = FromDTO(dto.enemy[1], false); }
-            if (dto.enemy.Length > 2 && dto.enemy[2] != null) { enemyTeam3[2] = FromDTO(dto.enemy[2], false); }
-            _enemyBuiltOnce = TeamIsFull(enemyTeam3);
+            if (dto.enemy.Length > 0 && dto.enemy[0] != null) { restoredEnemy[0] = FromDTO(dto.enemy[0], false); }
+            if (dto.enemy.Length > 1 && dto.enemy[1] != null) { restoredEnemy[1] = FromDTO(dto.enemy[1], false); }
+            if (dto.enemy.Length > 2 && dto.enemy[2] != null) { restoredEnemy[2] = FromDTO(dto.enemy[2], false); }
         }
+        enemyTrainer.LoadTeam(restoredEnemy, dto.enemyActive);
 
-        playerActiveIndex = dto.playerActive;
-        enemyActiveIndex = dto.enemyActive;
+        _enemyBuiltOnce = enemyTrainer.IsTeamFull();
+
+        myPokemonG = playerTrainer.ActivePokemon;
+        otherPokemonG = enemyTrainer.ActivePokemon;
 
         PokemonBattleManager.SetRoundFromSave(dto.round);
     }
@@ -778,10 +674,24 @@ public class PokemonGamemanager : MonoBehaviour
             }
         }
 
-        playerTeam3 = new Pokemon[3];
-        enemyTeam3 = new Pokemon[3];
-        playerActiveIndex = 0;
-        enemyActiveIndex = 0;
+        if (playerTrainer == null)
+        {
+            playerTrainer = new PokemonTrainer("Player", 3);
+        }
+        else
+        {
+            playerTrainer.ClearTeam();
+        }
+
+        if (enemyTrainer == null)
+        {
+            enemyTrainer = new PokemonTrainer("Enemy", 3);
+        }
+        else
+        {
+            enemyTrainer.ClearTeam();
+        }
+
         _enemyBuiltOnce = false;
 
         myPokemonG = null;
