@@ -53,6 +53,8 @@ public class PokemonBattleManager : MonoBehaviour
                 return;
             }
         }
+        Instance = this;
+        instance = this;
         myPokemonB = PokemonGamemanager.SelectAvailablePokemon(true, true);
         otherPokemonB = PokemonGamemanager.SelectAvailablePokemon(false, true);
         if (myPokemonB == null || otherPokemonB == null)
@@ -106,6 +108,14 @@ public class PokemonBattleManager : MonoBehaviour
         ShowFirstTurnLog();
         BindCommandButtons();
         BindSkillButtons();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     // =========================================================
@@ -413,45 +423,69 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =========================================================
+    // 적 행동
+    // =========================================================
+    private IEnumerator EnemyActOnceThenPass()
+    {
         if (otherPokemonB == null || myPokemonB == null)
         {
             yield break;
         }
 
-        Pokemon newP = PokemonGamemanager.SelectAvailablePokemon(true, false);
-            if (myPokemonB != null)
+        if (myPokemonB.Hp <= 0)
+        {
+            Pokemon newP = PokemonGamemanager.SelectAvailablePokemon(true, false);
+            myPokemonB = newP;
+            if (myInfo != null)
             {
-                myPokemonB.info = myInfo;
-                myInfo.ApplyBattleIdlePose();
+                myInfo.targetPokemon = myPokemonB;
+                if (myPokemonB != null)
+                {
+                    myPokemonB.info = myInfo;
+                    myInfo.ApplyBattleIdlePose();
+                }
             }
 
-        if (newP == null)
-        {
-            if (textLog != null)
+            if (newP == null)
             {
-                textLog.text = " ̻   ϸ .";
-                textLog.gameObject.SetActive(true);
+                if (textLog != null)
+                {
+                    textLog.text = " ̻   ϸ .";
+                    textLog.gameObject.SetActive(true);
+                }
+                yield break;
             }
         }
 
-    {
-        Pokemon newE = PokemonGamemanager.SelectAvailablePokemon(false, false);
-
-            if (otherPokemonB != null)
+        if (otherPokemonB.Hp <= 0)
+        {
+            Pokemon newE = PokemonGamemanager.SelectAvailablePokemon(false, false);
+            otherPokemonB = newE;
+            if (otherInfo != null)
             {
-                otherPokemonB.info = otherInfo;
-                otherInfo.ApplyBattleIdlePose();
+                otherInfo.targetPokemon = otherPokemonB;
+                if (otherPokemonB != null)
+                {
+                    otherPokemonB.info = otherInfo;
+                    otherInfo.ApplyBattleIdlePose();
+                }
             }
 
-        if (newE == null)
-        {
-            if (textLog != null)
+            if (newE == null)
             {
-                textLog.text = "밡  ̻  ϸ .";
-                textLog.gameObject.SetActive(true);
+                if (textLog != null)
+                {
+                    textLog.text = "밡  ̻  ϸ .";
+                    textLog.gameObject.SetActive(true);
+                }
+                yield break;
             }
         }
 
+        yield return new WaitForSeconds(0.5f);
+
+        int r = Random.Range(0, 10);
+        if (r < 7)
         {
             int s = Random.Range(0, 4);
 
