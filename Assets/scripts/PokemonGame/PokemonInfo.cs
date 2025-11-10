@@ -20,8 +20,8 @@ public class PokemonInfo : MonoBehaviour
     public Pokemon targetPokemon;
 
     private SpriteAtlas _atlas;
+    private string _currentAtlasName;
     private bool _isMoving;
-
 
     void Awake()
     {
@@ -30,12 +30,13 @@ public class PokemonInfo : MonoBehaviour
             BattleGameManager = FindObjectOfType<PokemonBattleManager>();
         }
     }
+
     private void Start()
     {
         ApplyBattleIdlePose();
     }
 
-    // ========= ¿Ãµø ø¨√‚ =========
+    // ========= Ïù¥Îèô =========
     public void SpriteMove(PokemonInfo otherInfo)
     {
         if (_isMoving) { return; }
@@ -79,7 +80,7 @@ public class PokemonInfo : MonoBehaviour
         _isMoving = false;
     }
 
-    // ========= ∆˜¡Ó ¿˚øÎ =========
+    // ========= Ìè¨Ï¶à =========
     public void ApplyBattleIdlePose()
     {
         if (targetPokemon == null) { return; }
@@ -104,12 +105,23 @@ public class PokemonInfo : MonoBehaviour
         SetSpriteFromAtlas(targetPokemon.spriteKeyDef);
     }
 
-    // ========= æ∆∆≤∂ÛΩ∫ =========
+    // ========= Ïú†Ìã∏ =========
     private void LoadAtlasIfNeeded(string path)
     {
-        if (_atlas != null) { return; }
-        if (string.IsNullOrEmpty(path)) { return; }
-        _atlas = Resources.Load<SpriteAtlas>(path);
+        if (string.IsNullOrEmpty(path))
+        {
+            _atlas = null;
+            _currentAtlasName = string.Empty;
+            return;
+        }
+
+        if (_atlas != null && _currentAtlasName == path)
+        {
+            return;
+        }
+
+        _atlas = PokemonSpriteAtlasProvider.GetAtlas(path);
+        _currentAtlasName = path;
     }
 
     private void SetSpriteFromAtlas(string spriteName)
