@@ -34,7 +34,13 @@ public class Pokemon
         defSk,
         hpSk
     }
+    public Tpye type;
+    public PokemonIndex index;
+    public PokemonInfo info;
 
+    public string name;
+
+    private int hp;
     // @   Ʈ Ű
     public string spriteKeyAttack = "";       // @   
     public string spriteKeySkill = "";        // @ ų ⿡ 
@@ -51,10 +57,6 @@ public class Pokemon
     public string atlasResourcePath = "";     // @ Resources 하위 SpriteAtlas 경로
     public string spriteKeyChoice = "";       // @ 선택 화면용
     public string spriteKeyBattleIdle = "";   // @ 배틀 대기 포즈
-
-    // @ 기존 프로젝트에 있던 필드명 보존(지침 3)
-    public string spriteKeyAttack = "";       // @ 공격 포즈(과거 명칭)
-    public string spriteKeySkill = "";        // @ 스킬 포즈(과거 명칭)
 
     // @ 새로 참조되는 필드 추가(에러 CS1061 해결용)
     public string spriteKeyAtk = "";          // @ 공격 포즈(신규 명칭)
