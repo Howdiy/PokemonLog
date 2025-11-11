@@ -10,8 +10,13 @@ public class PokemonTrainer
 
     private readonly Pokemon[] _team;
     private int _activeIndex = -1;
-
-    public int TeamSize => _team.Length;
+    public int TeamSize
+    {
+        get
+        {
+            return _team.Length;
+        }
+    }
 
     public PokemonTrainer(string trainerName, int maxTeamSize = 3)
     {
@@ -23,8 +28,13 @@ public class PokemonTrainer
 
         _team = new Pokemon[maxTeamSize];
     }
-
-    public Pokemon[] Team => _team;
+    public Pokemon[] Team
+    {
+        get
+        {
+            return _team;
+        }
+    }
 
     public int ActiveIndex
     {
@@ -219,4 +229,3 @@ public class PokemonTrainer
         ActiveIndex = -1;
     }
 }
-

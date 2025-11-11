@@ -6,7 +6,7 @@ public static class PokemonSpriteAtlasProvider
 {
     private static readonly Dictionary<string, SpriteAtlas> CachedAtlases = new Dictionary<string, SpriteAtlas>();
     private static bool _initialized;
-
+    private static SpriteAtlas _tmpAtlas;
     private static void EnsureInitialized()
     {
         if (_initialized)
@@ -29,6 +29,10 @@ public static class PokemonSpriteAtlasProvider
         CachedAtlases[atlas.name] = atlas;
     }
 
+    private static void AssignAtlas(SpriteAtlas loaded)
+    {
+        _tmpAtlas = loaded;
+    }
     private static void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> onCompleted)
     {
         SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasName);
@@ -62,8 +66,9 @@ public static class PokemonSpriteAtlasProvider
             CachedAtlases[atlas.name] = atlas;
             return atlas;
         }
-
-        OnAtlasRequested(atlasName, loadedAtlas => atlas = loadedAtlas);
+        OnAtlasRequested(atlasName, AssignAtlas);
+        atlas = _tmpAtlas;
+        _tmpAtlas = null;
         return atlas;
     }
 

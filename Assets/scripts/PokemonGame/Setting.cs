@@ -100,7 +100,8 @@ public class Setting : MonoBehaviour
     {
         SetSettingsMode(false);
         Scene active = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(active.name);
+        // @ 현재 씬 재시작 (이름→인덱스)
+        SceneManager.LoadScene(active.buildIndex);
     }
 
     public void OnClickSettingsExitToStart()
@@ -110,7 +111,7 @@ public class Setting : MonoBehaviour
         {
             if (exitToStartSaveSceneName.Length > 0)
             {
-                SceneManager.LoadScene(exitToStartSaveSceneName);
+                SceneManager.LoadScene(0);   // @ "PokemonStart"
                 return;
             }
         }

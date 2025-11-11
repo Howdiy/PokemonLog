@@ -89,13 +89,19 @@ public class PokemonBattleManager : MonoBehaviour
             return;
         }
 
-        myPokemonB = PokemonGamemanager.SelectAvailablePokemon(true, true);
+        myPokemonB = (PokemonGamemanager.playerTrainer != null)
+        ? PokemonGamemanager.playerTrainer.SelectAvailablePokemon(true)
+        : null;
         if (myPokemonB == null && PokemonGamemanager.myPokemonG != null)
         {
             myPokemonB = PokemonGamemanager.myPokemonG;
         }
-
-        otherPokemonB = PokemonGamemanager.SelectAvailablePokemon(false, true);
+        otherPokemonB = (PokemonGamemanager.enemyTrainer != null)
+        ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(true)
+        : null;
+        otherPokemonB = (PokemonGamemanager.enemyTrainer != null)
+                    ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(true)
+                    : null;
         if (otherPokemonB == null && PokemonGamemanager.otherPokemonG != null)
         {
             otherPokemonB = PokemonGamemanager.otherPokemonG;
@@ -453,7 +459,9 @@ public class PokemonBattleManager : MonoBehaviour
     // 교체 --------------------------------------------------------------
     private IEnumerator DoSwitchPlayer()
     {
-        Pokemon replacement = PokemonGamemanager.SelectAvailablePokemon(true, false);
+        Pokemon replacement = (PokemonGamemanager.playerTrainer != null)
+            ? PokemonGamemanager.playerTrainer.SelectAvailablePokemon(false)
+            : null;
         myPokemonB = replacement;
 
         if (myPokemonB != null)
@@ -482,7 +490,9 @@ public class PokemonBattleManager : MonoBehaviour
 
     private IEnumerator DoSwitchEnemy()
     {
-        Pokemon replacement = PokemonGamemanager.SelectAvailablePokemon(false, false);
+        Pokemon replacement = (PokemonGamemanager.enemyTrainer != null)
+            ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(false)
+            : null;
         otherPokemonB = replacement;
 
         if (otherPokemonB != null)
