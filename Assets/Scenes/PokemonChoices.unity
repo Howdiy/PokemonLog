@@ -151,22 +151,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 114e4b09ecf5f3f4989013f0d6e56ed5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  battleStart: {fileID: 352040640}
-  settingsRef: {fileID: 0}
-  settingPrefab: {fileID: 7642222773169062627, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
+  settingsPrefab: {fileID: 7642222773169062627, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
+  settingsParentHint: {fileID: 0}
   settingsUiRootHint: {fileID: 0}
   uiRoot: {fileID: 516236818}
-  settingsSortOrder: 5000
   titleText: {fileID: 1561559263}
   bts:
   - {fileID: 1716860815}
   - {fileID: 1151097989}
   - {fileID: 70382501}
   - {fileID: 576465988}
-  goBattleButton: {fileID: 352040642}
+  goBattleBt: {fileID: 352040642}
   StartBT: {fileID: 0}
   ContinueBT: {fileID: 0}
   ExitBT: {fileID: 0}
+  settingsRef: {fileID: 0}
 --- !u!4 &31580256
 Transform:
   m_ObjectHideFlags: 0
@@ -266,9 +265,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580255}
+      - m_Target: {fileID: 31580254}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: OnPokemonCilck
+        m_MethodName: 
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
