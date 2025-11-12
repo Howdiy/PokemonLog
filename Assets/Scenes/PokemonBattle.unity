@@ -210,7 +210,7 @@ MonoBehaviour:
   m_fontSize: 24
   m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -1692,7 +1692,7 @@ MonoBehaviour:
   m_fontSize: 24
   m_fontSizeBase: 24
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -6369,6 +6369,11 @@ MonoBehaviour:
   otherInfo: {fileID: 1997472510}
   textLog: {fileID: 6436242}
   roundText: {fileID: 867803702}
+  commandRoot: {fileID: 0}
+  attackBt: {fileID: 968545053}
+  bagBt: {fileID: 1854986570}
+  skillsBt: {fileID: 771588480}
+  pokemonListBt: {fileID: 895715396}
   commandBts:
   - {fileID: 968545053}
   - {fileID: 1854986570}
@@ -6390,8 +6395,8 @@ MonoBehaviour:
   switchButtons:
   - {fileID: 827322819}
   - {fileID: 1269803783}
-  playerNormalAttackFxPrefab: {fileID: 0}
-  enemyNormalAttackFxPrefab: {fileID: 0}
+  playerNormalAttackFxPrefab: {fileID: 8525990746615576120, guid: b85d21f3b8fed714bacf0c4fd50fa512, type: 3}
+  enemyNormalAttackFxPrefab: {fileID: 8525990746615576120, guid: b85d21f3b8fed714bacf0c4fd50fa512, type: 3}
   playerFxAnchor: {fileID: 0}
   enemyFxAnchor: {fileID: 0}
   gameOverPanel: {fileID: 2059726367}

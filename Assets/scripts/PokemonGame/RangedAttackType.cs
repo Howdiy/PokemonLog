@@ -1,18 +1,21 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// @ 원거리 공격 타입 @ 방어 일부 무시 느낌의 관통 보정
+/// @ 원거리 공격 타입 스킬
 /// </summary>
 public class RangedAttackType : SkillTpye
 {
-    /// <summary> @ 원거리 보정 @ 최소 1 보장 </summary>
-    public override int ComputeDamageOverride(Pokemon attacker, Pokemon defender, int currentDamage)
+    public override int ComputeDamageOverride(Pokemon self, Pokemon other, int baseDamage)
     {
-        int ignoreDef = defender.def / 8;
-        int finalDmg = currentDamage + ignoreDef;
-        finalDmg = finalDmg <= 1 ? 1 : finalDmg;
-        return finalDmg;
+        // @ (atk - (def + speed)) * 배율
+        float typeMul = Pokemon.battleType[(int)self.type, (int)other.type];
+
+        float raw = (float)self.atk - ((float)other.def + (float)other.speed);
+        raw = (raw < 1f) ? 1f : raw;
+
+        float dmgF = raw * typeMul;
+        dmgF = (dmgF <= 0f) ? 1f : dmgF;
+        int dmg = (int)dmgF;
+        return dmg;
     }
-}
+}   
