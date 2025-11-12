@@ -2197,7 +2197,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &438582809
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4034,7 +4034,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1699295608}
         m_TargetAssemblyTypeName: PokemonBattleManager, Assembly-CSharp
-        m_MethodName: OnClickAttack
+        m_MethodName: OnClickAttackCommand
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6497,7 +6497,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd28bbfbb0c786b40b82ed66906ec9f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  settingsRef: {fileID: 1644932674905681637, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
+  settingsRef: {fileID: 438582808}
+  settingsSortOrder: 5000
+  uiRoot: {fileID: 0}
   myInfo: {fileID: 338172510}
   otherInfo: {fileID: 1997472510}
   textLog: {fileID: 6436242}

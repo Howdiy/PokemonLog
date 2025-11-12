@@ -131,7 +131,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 31580256}
-  - component: {fileID: 31580255}
+  - component: {fileID: 31580257}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -139,33 +139,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &31580255
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 31580254}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 114e4b09ecf5f3f4989013f0d6e56ed5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  settingsPrefab: {fileID: 7642222773169062627, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
-  settingsParentHint: {fileID: 0}
-  settingsUiRootHint: {fileID: 0}
-  uiRoot: {fileID: 516236818}
-  titleText: {fileID: 1561559263}
-  bts:
-  - {fileID: 1716860815}
-  - {fileID: 1151097989}
-  - {fileID: 70382501}
-  - {fileID: 576465988}
-  goBattleBt: {fileID: 352040642}
-  StartBT: {fileID: 0}
-  ContinueBT: {fileID: 0}
-  ExitBT: {fileID: 0}
-  settingsRef: {fileID: 0}
 --- !u!4 &31580256
 Transform:
   m_ObjectHideFlags: 0
@@ -181,6 +154,34 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &31580257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31580254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 114e4b09ecf5f3f4989013f0d6e56ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settingsPrefab: {fileID: 7642222773169062627, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
+  settingsParentHint: {fileID: 516236818}
+  settingsUiRootHint: {fileID: 0}
+  uiRoot: {fileID: 0}
+  settingsSortOrder: 5000
+  settingsRef: {fileID: 0}
+  titleText: {fileID: 1561559263}
+  bts:
+  - {fileID: 1716860815}
+  - {fileID: 1151097989}
+  - {fileID: 70382501}
+  - {fileID: 576465988}
+  StartBT: {fileID: 0}
+  ContinueBT: {fileID: 0}
+  ExitBT: {fileID: 0}
+  goBattleBt: {fileID: 352040642}
 --- !u!1 &70382499
 GameObject:
   m_ObjectHideFlags: 0
@@ -265,9 +266,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580254}
+      - m_Target: {fileID: 31580257}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: 
+        m_MethodName: OnPokemonClick
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -534,9 +535,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580255}
+      - m_Target: {fileID: 31580254}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: BattleStart
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -861,9 +862,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580255}
+      - m_Target: {fileID: 31580257}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: OnPokemonCilck
+        m_MethodName: OnPokemonClick
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1468,9 +1469,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580255}
+      - m_Target: {fileID: 31580257}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: OnPokemonCilck
+        m_MethodName: OnPokemonClick
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1855,9 +1856,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 31580255}
+      - m_Target: {fileID: 31580257}
         m_TargetAssemblyTypeName: PokemonGamemanager, Assembly-CSharp
-        m_MethodName: OnPokemonCilck
+        m_MethodName: OnPokemonClick
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

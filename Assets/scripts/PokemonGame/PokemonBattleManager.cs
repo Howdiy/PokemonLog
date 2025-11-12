@@ -1,20 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class PokemonBattleManager : MonoBehaviour
 {
-    // 싱글톤 인스턴스 ---------------------------------------------------
+    // 싱글톤 --------------------------------------------------------------
     public static PokemonBattleManager instance;
     public static PokemonBattleManager Instance { get; private set; }
     private static int _pendingRound = 1;
 
-    // 설정 ---------------------------------------------------------------
-    public Setting settingsRef;
+    // Setting 연동 --------------------------------------------------------
+    public GameObject settingsRef;
+    public int settingsSortOrder = 5000;
+    public Transform uiRoot;
 
-    // 전투 UI ------------------------------------------------------------
+    // 전투 UI -------------------------------------------------------------
     public PokemonInfo myInfo;
     public PokemonInfo otherInfo;
 
@@ -24,35 +26,21 @@ public class PokemonBattleManager : MonoBehaviour
     public TextMeshProUGUI textLog;
     public TextMeshProUGUI roundText;
 
-    // Command : 0-Attack, 1-BAG, 2-BattleSkill, 3-PokemonList
+    // Command/Skill
     public Button[] commandBts;
     public Button[] skill1_4;
 
-    // 상점 ---------------------------------------------------------------
+    // 상점/교체
     public GameObject ShopPanel;
     public Button[] shopItemButtons;
-
-    // 교체 ---------------------------------------------------------------
     public GameObject switchPanel;
 
-    // 내부 상태 ----------------------------------------------------------
+    // 내부 상태 -----------------------------------------------------------
     private int roundIndex = 1;
     private bool isPlayerTurn = true;
     private bool _isInitialized;
 
-    // 상점 데이터 --------------------------------------------------------
-    private enum ShopKind { HealHP, BuffATK, BuffDEF, BuffSPD }
-
-    private struct ShopItem
-    {
-        public ShopKind kind;
-        public int value;
-        public string label;
-    }
-
-    private readonly List<ShopItem> _currentShopItems = new List<ShopItem>();
-
-    // 라이프사이클 -------------------------------------------------------
+    // 라이프사이클 --------------------------------------------------------
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -60,11 +48,10 @@ public class PokemonBattleManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
         instance = this;
-        _isInitialized = false;
 
+        _isInitialized = false;
         roundIndex = Mathf.Max(1, _pendingRound);
 
         InitializeBattleState();
@@ -72,39 +59,34 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (Instance == this)
-        {
-            Instance = null;
-        }
-        if (instance == this)
-        {
-            instance = null;
-        }
+        if (Instance == this) { Instance = null; }
+        if (instance == this) { instance = null; }
     }
 
+    // 초기화 --------------------------------------------------------------
     private void InitializeBattleState()
     {
-        if (_isInitialized)
+        if (_isInitialized) { return; }
+
+        // @ 트레이너 참조 제거: 정적 팀에서 “살아있는” 개체를 고른다
+        myPokemonB = PokemonGamemanager.myPokemonG;
+        if (myPokemonB == null)
         {
-            return;
+            myPokemonB = FirstAlive(PokemonGamemanager.playerTeam3);
+            if (myPokemonB != null)
+            {
+                PokemonGamemanager.playerActiveIndex = IndexOf(PokemonGamemanager.playerTeam3, myPokemonB);
+            }
         }
 
-        myPokemonB = (PokemonGamemanager.playerTrainer != null)
-        ? PokemonGamemanager.playerTrainer.SelectAvailablePokemon(true)
-        : null;
-        if (myPokemonB == null && PokemonGamemanager.myPokemonG != null)
+        otherPokemonB = PokemonGamemanager.otherPokemonG;
+        if (otherPokemonB == null)
         {
-            myPokemonB = PokemonGamemanager.myPokemonG;
-        }
-        otherPokemonB = (PokemonGamemanager.enemyTrainer != null)
-        ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(true)
-        : null;
-        otherPokemonB = (PokemonGamemanager.enemyTrainer != null)
-                    ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(true)
-                    : null;
-        if (otherPokemonB == null && PokemonGamemanager.otherPokemonG != null)
-        {
-            otherPokemonB = PokemonGamemanager.otherPokemonG;
+            otherPokemonB = FirstAlive(PokemonGamemanager.enemyTeam3);
+            if (otherPokemonB != null)
+            {
+                PokemonGamemanager.enemyActiveIndex = IndexOf(PokemonGamemanager.enemyTeam3, otherPokemonB);
+            }
         }
 
         if (myPokemonB == null || otherPokemonB == null)
@@ -117,8 +99,8 @@ public class PokemonBattleManager : MonoBehaviour
             return;
         }
 
-        PokemonBattleManager.ConfigureAtlasForSide(myPokemonB, true);
-        PokemonBattleManager.ConfigureAtlasForSide(otherPokemonB, false);
+        ConfigureAtlasForSide(myPokemonB, true);
+        ConfigureAtlasForSide(otherPokemonB, false);
 
         if (myInfo != null)
         {
@@ -150,7 +132,7 @@ public class PokemonBattleManager : MonoBehaviour
         _isInitialized = true;
     }
 
-    // 선제공격 -----------------------------------------------------------
+    // 턴 결정 ------------------------------------------------------------
     private void DecideFirstTurn()
     {
         if (myPokemonB == null || otherPokemonB == null)
@@ -162,24 +144,19 @@ public class PokemonBattleManager : MonoBehaviour
         if (myPokemonB.speed > otherPokemonB.speed)
         {
             isPlayerTurn = true;
+            return;
         }
-        else if (myPokemonB.speed < otherPokemonB.speed)
+        if (myPokemonB.speed < otherPokemonB.speed)
         {
             isPlayerTurn = false;
+            return;
         }
-        else
-        {
-            isPlayerTurn = (roundIndex % 2) == 1;
-        }
+        isPlayerTurn = (roundIndex % 2) == 1 ? true : false;
     }
 
     private void ShowFirstTurnLog()
     {
-        if (textLog == null)
-        {
-            return;
-        }
-
+        if (textLog == null) { return; }
         string msg = isPlayerTurn ? "선제공격 판정 성공!" : "선제공격 판정 실패";
         textLog.text = msg;
         textLog.gameObject.SetActive(true);
@@ -189,38 +166,29 @@ public class PokemonBattleManager : MonoBehaviour
     private IEnumerator HideLogAfter(float sec)
     {
         yield return new WaitForSeconds(sec);
-        if (textLog != null)
-        {
-            textLog.gameObject.SetActive(false);
-        }
+        if (textLog != null) { textLog.gameObject.SetActive(false); }
     }
 
     // 버튼 바인딩 --------------------------------------------------------
     private void BindCommandButtons()
     {
-        if (commandBts == null)
-        {
-            return;
-        }
+        if (commandBts == null) { return; }
 
         if (commandBts.Length > 0 && commandBts[0] != null)
         {
             commandBts[0].onClick.RemoveAllListeners();
             commandBts[0].onClick.AddListener(OnClickAttackCommand);
         }
-
         if (commandBts.Length > 1 && commandBts[1] != null)
         {
             commandBts[1].onClick.RemoveAllListeners();
             commandBts[1].onClick.AddListener(OpenShop);
         }
-
         if (commandBts.Length > 2 && commandBts[2] != null)
         {
             commandBts[2].onClick.RemoveAllListeners();
             commandBts[2].onClick.AddListener(OpenSkillPanel);
         }
-
         if (commandBts.Length > 3 && commandBts[3] != null)
         {
             commandBts[3].onClick.RemoveAllListeners();
@@ -230,29 +198,23 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void BindSkillButtons()
     {
-        if (skill1_4 == null)
-        {
-            return;
-        }
+        if (skill1_4 == null) { return; }
 
         if (skill1_4.Length > 0 && skill1_4[0] != null)
         {
             skill1_4[0].onClick.RemoveAllListeners();
             skill1_4[0].onClick.AddListener(OnClickSkill0);
         }
-
         if (skill1_4.Length > 1 && skill1_4[1] != null)
         {
             skill1_4[1].onClick.RemoveAllListeners();
             skill1_4[1].onClick.AddListener(OnClickSkill1);
         }
-
         if (skill1_4.Length > 2 && skill1_4[2] != null)
         {
             skill1_4[2].onClick.RemoveAllListeners();
             skill1_4[2].onClick.AddListener(OnClickSkill2);
         }
-
         if (skill1_4.Length > 3 && skill1_4[3] != null)
         {
             skill1_4[3].onClick.RemoveAllListeners();
@@ -262,13 +224,10 @@ public class PokemonBattleManager : MonoBehaviour
         SetSkillButtonsActive(false);
     }
 
-    // 커맨드 동작 --------------------------------------------------------
+    // 커맨드 -------------------------------------------------------------
     public void OnClickAttackCommand()
     {
-        if (!isPlayerTurn)
-        {
-            return;
-        }
+        if (!isPlayerTurn) { return; }
 
         if (textLog != null && myPokemonB != null)
         {
@@ -281,20 +240,13 @@ public class PokemonBattleManager : MonoBehaviour
 
     public void OpenSkillPanel()
     {
-        if (!isPlayerTurn)
-        {
-            return;
-        }
-
+        if (!isPlayerTurn) { return; }
         SetSkillButtonsActive(true);
     }
 
     public void OpenSwitch()
     {
-        if (switchPanel != null)
-        {
-            switchPanel.SetActive(true);
-        }
+        if (switchPanel != null) { switchPanel.SetActive(true); }
     }
 
     public void OnClickSkill0() { OnSkillClick(0); }
@@ -304,19 +256,21 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void OnSkillClick(int skillIdx)
     {
-        if (!isPlayerTurn)
-        {
-            return;
-        }
+        if (!isPlayerTurn) { return; }
 
         if (textLog != null && myPokemonB != null)
         {
             string sName = "스킬";
-            if (myPokemonB.skillNames != null && skillIdx >= 0 && skillIdx < myPokemonB.skillNames.Length)
+            if (myPokemonB.skillNames != null)
             {
-                sName = myPokemonB.skillNames[skillIdx];
+                if (skillIdx >= 0)
+                {
+                    if (skillIdx < myPokemonB.skillNames.Length)
+                    {
+                        sName = myPokemonB.skillNames[skillIdx];
+                    }
+                }
             }
-
             textLog.text = myPokemonB.name + "이 " + sName + "을 사용하였다.";
             textLog.gameObject.SetActive(true);
         }
@@ -327,11 +281,7 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void SetSkillButtonsActive(bool active)
     {
-        if (skill1_4 == null)
-        {
-            return;
-        }
-
+        if (skill1_4 == null) { return; }
         for (int i = 0; i < skill1_4.Length; i++)
         {
             if (skill1_4[i] != null)
@@ -339,20 +289,14 @@ public class PokemonBattleManager : MonoBehaviour
                 skill1_4[i].gameObject.SetActive(active);
             }
         }
-
-        if (!active && textLog != null)
-        {
-            textLog.gameObject.SetActive(true);
-        }
+        if (!active && textLog != null) { textLog.gameObject.SetActive(true); }
     }
 
-    // 전투 실행 ---------------------------------------------------------
+    // 전투 실행 ----------------------------------------------------------
     private IEnumerator PerformAttack(Pokemon attacker, Pokemon defender, int skillIndex)
     {
-        if (attacker == null || defender == null)
-        {
-            yield break;
-        }
+        if (attacker == null) { yield break; }
+        if (defender == null) { yield break; }
 
         if (attacker.info != null)
         {
@@ -362,32 +306,17 @@ public class PokemonBattleManager : MonoBehaviour
 
         yield return StartCoroutine(attacker.Attack(defender, skillIndex));
 
-        if (defender.info != null)
-        {
-            defender.info.ApplySkillPose();
-        }
-
+        if (defender.info != null) { defender.info.ApplySkillPose(); }
         yield return new WaitForSeconds(0.25f);
-
-        if (attacker.info != null)
-        {
-            attacker.info.ApplyBattleIdlePose();
-        }
-        if (defender.info != null)
-        {
-            defender.info.ApplyBattleIdlePose();
-        }
+        if (attacker.info != null) { attacker.info.ApplyBattleIdlePose(); }
+        if (defender.info != null) { defender.info.ApplyBattleIdlePose(); }
 
         yield return new WaitForSeconds(0.35f);
-        if (textLog != null)
-        {
-            textLog.gameObject.SetActive(false);
-        }
+        if (textLog != null) { textLog.gameObject.SetActive(false); }
 
         yield return StartCoroutine(CheckAndResolveFaintStates());
 
         isPlayerTurn = !isPlayerTurn;
-
         if (!isPlayerTurn)
         {
             yield return StartCoroutine(EnemyActOnceThenPass());
@@ -400,14 +329,20 @@ public class PokemonBattleManager : MonoBehaviour
 
     private IEnumerator CheckAndResolveFaintStates()
     {
-        if (myPokemonB != null && myPokemonB.Hp <= 0)
+        if (myPokemonB != null)
         {
-            yield return StartCoroutine(DoSwitchPlayer());
+            if (myPokemonB.Hp <= 0)
+            {
+                yield return StartCoroutine(DoSwitchPlayer());
+            }
         }
 
-        if (otherPokemonB != null && otherPokemonB.Hp <= 0)
+        if (otherPokemonB != null)
         {
-            yield return StartCoroutine(DoSwitchEnemy());
+            if (otherPokemonB.Hp <= 0)
+            {
+                yield return StartCoroutine(DoSwitchEnemy());
+            }
         }
     }
 
@@ -431,10 +366,26 @@ public class PokemonBattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.25f);
 
-        bool useSkill = otherPokemonB.skillNames != null && otherPokemonB.skillNames.Length > 0 && Random.Range(0, 2) == 0;
+        bool useSkill = false;
+        if (otherPokemonB.skillNames != null)
+        {
+            if (otherPokemonB.skillNames.Length > 0)
+            {
+                useSkill = Random.Range(0, 2) == 0 ? true : false;
+            }
+        }
+
         if (useSkill)
         {
-            int s = Random.Range(0, Mathf.Min(4, otherPokemonB.skillNames.Length));
+            int sMax = 4;
+            if (otherPokemonB.skillNames != null)
+            {
+                if (otherPokemonB.skillNames.Length < sMax)
+                {
+                    sMax = otherPokemonB.skillNames.Length;
+                }
+            }
+            int s = Random.Range(0, sMax);
             if (textLog != null)
             {
                 string sName = otherPokemonB.skillNames[s];
@@ -456,16 +407,14 @@ public class PokemonBattleManager : MonoBehaviour
         isPlayerTurn = true;
     }
 
-    // 교체 --------------------------------------------------------------
+    // 교체 ---------------------------------------------------------------
     private IEnumerator DoSwitchPlayer()
     {
-        Pokemon replacement = (PokemonGamemanager.playerTrainer != null)
-            ? PokemonGamemanager.playerTrainer.SelectAvailablePokemon(false)
-            : null;
+        Pokemon replacement = NextAliveAfterIndex(PokemonGamemanager.playerTeam3, PokemonGamemanager.playerActiveIndex);
         myPokemonB = replacement;
-
         if (myPokemonB != null)
         {
+            PokemonGamemanager.playerActiveIndex = IndexOf(PokemonGamemanager.playerTeam3, myPokemonB);
             ConfigureAtlasForSide(myPokemonB, true);
         }
 
@@ -490,13 +439,11 @@ public class PokemonBattleManager : MonoBehaviour
 
     private IEnumerator DoSwitchEnemy()
     {
-        Pokemon replacement = (PokemonGamemanager.enemyTrainer != null)
-            ? PokemonGamemanager.enemyTrainer.SelectAvailablePokemon(false)
-            : null;
+        Pokemon replacement = NextAliveAfterIndex(PokemonGamemanager.enemyTeam3, PokemonGamemanager.enemyActiveIndex);
         otherPokemonB = replacement;
-
         if (otherPokemonB != null)
         {
+            PokemonGamemanager.enemyActiveIndex = IndexOf(PokemonGamemanager.enemyTeam3, otherPokemonB);
             ConfigureAtlasForSide(otherPokemonB, false);
         }
 
@@ -519,7 +466,11 @@ public class PokemonBattleManager : MonoBehaviour
         yield return null;
     }
 
-    // 상점 --------------------------------------------------------------
+    // 상점(간단 유지) ----------------------------------------------------
+    private enum ShopKind { HealHP, BuffATK, BuffDEF, BuffSPD }
+    private struct ShopItem { public ShopKind kind; public int value; public string label; }
+    private readonly List<ShopItem> _currentShopItems = new List<ShopItem>();
+
     private void OpenShop()
     {
         if (!isPlayerTurn)
@@ -528,37 +479,22 @@ public class PokemonBattleManager : MonoBehaviour
             return;
         }
 
-        if (ShopPanel == null || shopItemButtons == null)
-        {
-            StartCoroutine(EnemyActOnceThenPass());
-            return;
-        }
+        if (ShopPanel == null) { StartCoroutine(EnemyActOnceThenPass()); return; }
+        if (shopItemButtons == null) { StartCoroutine(EnemyActOnceThenPass()); return; }
 
         _currentShopItems.Clear();
         _currentShopItems.AddRange(BuildRandom5Items());
-
         ShopPanel.SetActive(true);
 
         for (int i = 0; i < shopItemButtons.Length; i++)
         {
-            if (shopItemButtons[i] == null)
-            {
-                continue;
-            }
-
+            if (shopItemButtons[i] == null) { continue; }
             TextMeshProUGUI label = shopItemButtons[i].GetComponentInChildren<TextMeshProUGUI>();
             if (label != null)
             {
-                if (i < _currentShopItems.Count)
-                {
-                    label.text = _currentShopItems[i].label;
-                }
-                else
-                {
-                    label.text = "-";
-                }
+                if (i < _currentShopItems.Count) { label.text = _currentShopItems[i].label; }
+                else { label.text = "-"; }
             }
-
             shopItemButtons[i].onClick.RemoveAllListeners();
         }
 
@@ -577,17 +513,12 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void UseShopItemIndex(int idx)
     {
-        if (idx < 0 || idx >= _currentShopItems.Count)
-        {
-            return;
-        }
+        if (idx < 0) { return; }
+        if (idx >= _currentShopItems.Count) { return; }
 
         ApplyItem(myPokemonB, _currentShopItems[idx]);
 
-        if (ShopPanel != null)
-        {
-            ShopPanel.SetActive(false);
-        }
+        if (ShopPanel != null) { ShopPanel.SetActive(false); }
 
         isPlayerTurn = false;
         StartCoroutine(EnemyActOnceThenPass());
@@ -596,10 +527,7 @@ public class PokemonBattleManager : MonoBehaviour
     private List<ShopItem> BuildRandom5Items()
     {
         List<ShopItem> list = new List<ShopItem>();
-        for (int i = 0; i < 5; i++)
-        {
-            list.Add(RandomShopItem());
-        }
+        for (int i = 0; i < 5; i++) { list.Add(RandomShopItem()); }
         return list;
     }
 
@@ -607,85 +535,99 @@ public class PokemonBattleManager : MonoBehaviour
     {
         int r = Random.Range(0, 4);
         ShopItem item = new ShopItem();
-
-        switch (r)
+        if (r == 0)
         {
-            case 0:
-                item.kind = ShopKind.HealHP;
-                item.value = Random.Range(10, 31);
-                item.label = "HP 회복 +" + item.value.ToString();
-                break;
-            case 1:
-                item.kind = ShopKind.BuffATK;
-                item.value = Random.Range(2, 7);
-                item.label = "공격 +" + item.value.ToString();
-                break;
-            case 2:
-                item.kind = ShopKind.BuffDEF;
-                item.value = Random.Range(2, 7);
-                item.label = "방어 +" + item.value.ToString();
-                break;
-            default:
-                item.kind = ShopKind.BuffSPD;
-                item.value = Random.Range(2, 7);
-                item.label = "속도 +" + item.value.ToString();
-                break;
+            item.kind = ShopKind.HealHP;
+            item.value = Random.Range(10, 31);
+            item.label = "HP 회복 +" + item.value.ToString();
+            return item;
         }
-
+        if (r == 1)
+        {
+            item.kind = ShopKind.BuffATK;
+            item.value = Random.Range(2, 7);
+            item.label = "공격 +" + item.value.ToString();
+            return item;
+        }
+        if (r == 2)
+        {
+            item.kind = ShopKind.BuffDEF;
+            item.value = Random.Range(2, 7);
+            item.label = "방어 +" + item.value.ToString();
+            return item;
+        }
+        item.kind = ShopKind.BuffSPD;
+        item.value = Random.Range(2, 7);
+        item.label = "속도 +" + item.value.ToString();
         return item;
     }
 
     private void ApplyItem(Pokemon target, ShopItem item)
     {
-        if (target == null)
-        {
-            return;
-        }
+        if (target == null) { return; }
 
-        switch (item.kind)
-        {
-            case ShopKind.HealHP:
-                target.Hp = target.Hp + item.value;
-                break;
-            case ShopKind.BuffATK:
-                target.atk = target.atk + item.value;
-                break;
-            case ShopKind.BuffDEF:
-                target.def = target.def + item.value;
-                break;
-            default:
-                target.speed = target.speed + item.value;
-                break;
-        }
+        if (item.kind == ShopKind.HealHP) { target.Hp = target.Hp + item.value; }
+        else if (item.kind == ShopKind.BuffATK) { target.atk = target.atk + item.value; }
+        else if (item.kind == ShopKind.BuffDEF) { target.def = target.def + item.value; }
+        else { target.speed = target.speed + item.value; }
 
         if (textLog != null)
         {
-            bool isEnemy = target == otherPokemonB;
-            string prefix = isEnemy ? "적의 " : string.Empty;
+            bool isEnemy = target == otherPokemonB ? true : false;
+            string prefix = isEnemy ? "적의 " : "";
             textLog.text = prefix + target.name + "이 " + item.label + "을 사용하였다.";
             textLog.gameObject.SetActive(true);
         }
     }
 
-    // 유틸 --------------------------------------------------------------
+    // 유틸 ---------------------------------------------------------------
+    private static Pokemon FirstAlive(Pokemon[] team)
+    {
+        if (team == null) { return null; }
+        for (int i = 0; i < team.Length; i++)
+        {
+            Pokemon p = team[i];
+            if (p != null)
+            {
+                if (p.Hp > 0) { return p; }
+            }
+        }
+        return null;
+    }
+
+    private static int IndexOf(Pokemon[] team, Pokemon p)
+    {
+        if (team == null) { return -1; }
+        for (int i = 0; i < team.Length; i++)
+        {
+            if (team[i] == p) { return i; }
+        }
+        return -1;
+    }
+
+    private static Pokemon NextAliveAfterIndex(Pokemon[] team, int startExclusive)
+    {
+        if (team == null) { return null; }
+        int idx = startExclusive + 1;
+        while (idx < team.Length)
+        {
+            Pokemon cand = team[idx];
+            if (cand != null)
+            {
+                if (cand.Hp > 0) { return cand; }
+            }
+            idx = idx + 1;
+        }
+        return null;
+    }
+
     public static Pokemon CreateByIndexShared(Pokemon.PokemonIndex idx, bool isPlayerSide)
     {
         Pokemon pokemon;
-        switch (idx)
-        {
-            case Pokemon.PokemonIndex.pikach:
-                pokemon = new Pika();
-                break;
-            case Pokemon.PokemonIndex.paily:
-                pokemon = new Paily();
-                break;
-            case Pokemon.PokemonIndex.goBook:
-                pokemon = new GoBook();
-                break;
-            default:
-                pokemon = new Esang();
-                break;
-        }
+        if (idx == Pokemon.PokemonIndex.pikach) { pokemon = new Pika(); }
+        else if (idx == Pokemon.PokemonIndex.paily) { pokemon = new Paily(); }
+        else if (idx == Pokemon.PokemonIndex.goBook) { pokemon = new GoBook(); }
+        else { pokemon = new Esang(); }
 
         pokemon.index = idx;
         ConfigureAtlasForSide(pokemon, isPlayerSide);
@@ -694,53 +636,48 @@ public class PokemonBattleManager : MonoBehaviour
 
     public static void ConfigureAtlasForSide(Pokemon pokemon, bool isPlayerSide)
     {
-        if (pokemon == null)
+        if (pokemon == null) { return; }
+
+        if (pokemon.index == Pokemon.PokemonIndex.pikach)
         {
+            pokemon.atlasResourcePath = "PikaSpriteAtlas";
+            pokemon.spriteKeyChoice = "PIKACH";
+            pokemon.spriteKeyBattleIdle = "PIKA2";
+            pokemon.spriteKeyAttack = "PIKA4";
+            pokemon.spriteKeySkill = "PIKA3";
+            return;
+        }
+        if (pokemon.index == Pokemon.PokemonIndex.paily)
+        {
+            pokemon.atlasResourcePath = "PailySpriteAtlas";
+            pokemon.spriteKeyChoice = "PAILY";
+            pokemon.spriteKeyBattleIdle = "PAILY2";
+            pokemon.spriteKeyAttack = "PAILY4";
+            pokemon.spriteKeySkill = "PAILY3";
+            return;
+        }
+        if (pokemon.index == Pokemon.PokemonIndex.goBook)
+        {
+            pokemon.atlasResourcePath = "GoBookSpriteAtlas";
+            pokemon.spriteKeyChoice = "GOBOOK1";
+            pokemon.spriteKeyBattleIdle = "GOBOOK2";
+            pokemon.spriteKeyAttack = "GOBOOK4";
+            pokemon.spriteKeySkill = "GOBOOK3";
             return;
         }
 
-        switch (pokemon.index)
-        {
-            case Pokemon.PokemonIndex.pikach:
-                pokemon.atlasResourcePath = "PikaSpriteAtlas";
-                pokemon.spriteKeyChoice = "PIKACH";
-                pokemon.spriteKeyBattleIdle = "PIKA2";
-                pokemon.spriteKeyAttack = "PIKA4";
-                pokemon.spriteKeySkill = "PIKA3";
-                break;
-            case Pokemon.PokemonIndex.paily:
-                pokemon.atlasResourcePath = "PailySpriteAtlas";
-                pokemon.spriteKeyChoice = "PAILY";
-                pokemon.spriteKeyBattleIdle = "PAILY2";
-                pokemon.spriteKeyAttack = "PAILY4";
-                pokemon.spriteKeySkill = "PAILY3";
-                break;
-            case Pokemon.PokemonIndex.goBook:
-                pokemon.atlasResourcePath = "GoBookSpriteAtlas";
-                pokemon.spriteKeyChoice = "GOBOOK1";
-                pokemon.spriteKeyBattleIdle = "GOBOOK2";
-                pokemon.spriteKeyAttack = "GOBOOK4";
-                pokemon.spriteKeySkill = "GOBOOK3";
-                break;
-            default:
-                pokemon.atlasResourcePath = "EsangSpriteAtlas";
-                pokemon.spriteKeyChoice = "ESANGSEE";
-                pokemon.spriteKeyBattleIdle = "ESANG2";
-                pokemon.spriteKeyAttack = "ESANG4";
-                pokemon.spriteKeySkill = "ESANG3";
-                break;
-        }
+        pokemon.atlasResourcePath = "EsangSpriteAtlas";
+        pokemon.spriteKeyChoice = "ESANGSEE";
+        pokemon.spriteKeyBattleIdle = "ESANG2";
+        pokemon.spriteKeyAttack = "ESANG4";
+        pokemon.spriteKeySkill = "ESANG3";
     }
 
     private IEnumerator StartNextRoundFlow()
     {
-        roundIndex += 1;
+        roundIndex = roundIndex + 1;
         _pendingRound = roundIndex;
-        if (roundText != null)
-        {
-            roundText.text = "Round " + roundIndex.ToString();
-        }
-
+        if (roundText != null) { roundText.text = "Round " + roundIndex.ToString(); }
         DecideFirstTurn();
         ShowFirstTurnLog();
         yield return null;
@@ -754,16 +691,46 @@ public class PokemonBattleManager : MonoBehaviour
     public static void SetRoundFromSave(int round)
     {
         _pendingRound = Mathf.Max(1, round);
-
-        if (Instance == null)
-        {
-            return;
-        }
+        if (Instance == null) { return; }
 
         Instance.roundIndex = _pendingRound;
         if (Instance.roundText != null)
         {
             Instance.roundText.text = "Round " + Instance.roundIndex.ToString();
         }
+    }
+
+    // Setting 포워딩 -----------------------------------------------------
+    private void EnsureSettingForBattle()
+    {
+        if (settingsRef == null) { return; }
+        Setting s = settingsRef.GetComponent<Setting>();
+        if (s != null)
+        {
+            if (uiRoot != null) { s.uiRoot = uiRoot; }
+            s.settingsSortOrder = settingsSortOrder;
+            if (settingsRef.activeSelf) { settingsRef.SetActive(false); }
+        }
+    }
+
+    public void OnClickSettingsButton()
+    {
+        if (settingsRef == null) { return; }
+        settingsRef.SendMessage("OnClickSettingsButton", SendMessageOptions.DontRequireReceiver);
+    }
+    public void OnClickSettingsResume()
+    {
+        if (settingsRef == null) { return; }
+        settingsRef.SendMessage("OnClickSettingsResume", SendMessageOptions.DontRequireReceiver);
+    }
+    public void OnClickSettingsRestart()
+    {
+        if (settingsRef == null) { return; }
+        settingsRef.SendMessage("OnClickSettingsRestart", SendMessageOptions.DontRequireReceiver);
+    }
+    public void OnClickSettingsExitToStart()
+    {
+        if (settingsRef == null) { return; }
+        settingsRef.SendMessage("OnClickSettingsExitToStart", SendMessageOptions.DontRequireReceiver);
     }
 }
