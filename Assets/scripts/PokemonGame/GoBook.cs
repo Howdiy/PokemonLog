@@ -24,9 +24,9 @@ public class GoBook : Pokemon
 
         atlasResourcePath = "GoBookSpriteAtlas";
         spriteKeyChoice = "GOBOOK";
-        spriteKeyBattleIdle = "gobook2";
-        spriteKeyAttack = "gobook4";
-        spriteKeySkill = "gobook3";
+        spriteKeyBattleIdle = "GOBOOK2";
+        spriteKeyAttack = "GOBOOK4";
+        spriteKeySkill = "GOBOOK3";
     }
 
     public override string Skill1() { return "몸통박치기"; }

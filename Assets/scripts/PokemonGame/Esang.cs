@@ -24,9 +24,9 @@ public class Esang : Pokemon
 
         atlasResourcePath = "EsangSpriteAtlas";
         spriteKeyChoice = "ESANG";
-        spriteKeyBattleIdle = "esang2";
-        spriteKeyAttack = "esang4";
-        spriteKeySkill = "esang3";
+        spriteKeyBattleIdle = "ESANG2";
+        spriteKeyAttack = "ESANG4";
+        spriteKeySkill = "ESANG3";
     }
 
     public override string Skill1() { return "¿Ÿ≥Ø∞°∏£±‚"; }

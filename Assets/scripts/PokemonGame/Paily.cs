@@ -24,9 +24,9 @@ public class Paily : Pokemon
 
         atlasResourcePath = "PailySpriteAtlas";
         spriteKeyChoice = "PAILY";
-        spriteKeyBattleIdle = "paily2";
-        spriteKeyAttack = "paily4";
-        spriteKeySkill = "paily3";
+        spriteKeyBattleIdle = "PAILY2";
+        spriteKeyAttack = "PAILY4";
+        spriteKeySkill = "PAILY3";
     }
 
     public override string Skill1() { return "ÇÒÄû±â"; }

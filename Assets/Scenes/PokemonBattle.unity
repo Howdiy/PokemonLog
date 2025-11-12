@@ -6387,11 +6387,16 @@ MonoBehaviour:
   - {fileID: 2088690873}
   - {fileID: 276148322}
   switchPanel: {fileID: 1811491837}
+  switchButtons:
+  - {fileID: 827322819}
+  - {fileID: 1269803783}
+  playerNormalAttackFxPrefab: {fileID: 0}
+  enemyNormalAttackFxPrefab: {fileID: 0}
+  playerFxAnchor: {fileID: 0}
+  enemyFxAnchor: {fileID: 0}
   gameOverPanel: {fileID: 2059726367}
   gameOverText: {fileID: 2146934418}
   gameOverButton: {fileID: 241457511}
-  playerSkillEffects: []
-  enemySkillEffects: []
 --- !u!4 &1699295609
 Transform:
   m_ObjectHideFlags: 0
