@@ -5,6 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// @ 전투 진행 매니저(사람 vs 알고리즘)
+/// @ 적 측은 UI/오브젝트 없이 내부 로직으로만 동작
+/// @ 교체 UI는 플레이어 쪽만 2슬롯 제공
+/// </summary>
 public class PokemonBattleManager : MonoBehaviour
 {
     // @ 싱글톤
@@ -12,12 +17,7 @@ public class PokemonBattleManager : MonoBehaviour
     public static PokemonBattleManager Instance { get; private set; }
 
     // @ 라운드 스냅샷(저장/로딩 연계용)
-    private static int _pendingRound = 1;   // 씬 로드 전 임시 보관
-
-    // @ Setting 포워딩 확장용
-    public GameObject settingsRef;
-    public int settingsSortOrder = 5000;
-    public Transform uiRoot;
+    private static int _pendingRound = 1;
 
     // @ 전투 UI
     public PokemonInfo myInfo;
@@ -25,30 +25,25 @@ public class PokemonBattleManager : MonoBehaviour
     public TextMeshProUGUI textLog;
     public TextMeshProUGUI roundText;
 
-    // @ 명령 버튼(인스펙터 직접 연결용)  @ Attack / Bag / Skills / PokemonList
-    public GameObject commandRoot;      // @ 4개 버튼의 부모 루트
+    // @ 명령 버튼(인스펙터 직접 연결)
+    public GameObject commandRoot;
     public Button attackBt;
     public Button bagBt;
     public Button skillsBt;
     public Button pokemonListBt;
+    public Button[] commandBts;
 
-    // @ 기존 배열 기반 바인딩도 유지(호환용)
-    public Button[] commandBts;         // @ [0]=Attack [1]=Bag [2]=Skills [3]=PokemonList
+    // @ 스킬 버튼(플레이어 1~4)
+    public Button[] skill1_4;
 
-    // @ 스킬 버튼(플레이어) 4개
-    public Button[] skill1_4;           // @ 4개의 스킬 버튼
-
-    // @ 상점 및 교체 패널
+    // @ 상점 및 교체 패널(플레이어만)
     public GameObject ShopPanel;
-    public Button[] shopItemButtons;    // @ 5개
+    public Button[] shopItemButtons;
     public GameObject switchPanel;
-    public Button[] switchButtons;      // @ 교체 버튼 3개
+    public Button[] switchButtons;   // 정확히 2개 연결 권장
 
-    // @ 일반공격 FX
-    public GameObject playerNormalAttackFxPrefab;
-    public GameObject enemyNormalAttackFxPrefab;
-    public Transform playerFxAnchor;
-    public Transform enemyFxAnchor;
+    // @ 일반공격 FX 프리팹(플레이어/적 공용)
+    public GameObject NormalAttackFxPerfsb;
 
     // @ 게임오버 패널
     public GameObject gameOverPanel;
@@ -60,18 +55,21 @@ public class PokemonBattleManager : MonoBehaviour
     private Pokemon otherPokemonB;
     private int roundIndex = 1;
 
-    // @ 턴/쿨다운 관리
+    // @ 턴/쿨다운
     private bool isPlayerTurn = true;
     private int playerTurnTick = 0;
     private int enemyTurnTick = 0;
     private int[] playerLastUsedTurn = new int[4] { -999, -999, -999, -999 };
     private int[] enemyLastUsedTurn = new int[4] { -999, -999, -999, -999 };
 
-    // @ 내부 플래그
+    // @ 스위치 슬롯 -> 팀 인덱스(플레이어 2칸)
+    private int[] _switchSlotToTeamIndex = new int[2] { -1, -1 };
+
+    // @ 상태
     private bool isGameOverShown = false;
 
     // =====================================================================
-    // @ 저장/로딩 연계: 외부에서 라운드 값을 세팅/조회
+    // 저장/로딩 연계
     // =====================================================================
     public static int GetRoundSnapshot()
     {
@@ -97,7 +95,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =====================================================================
-    // @ 라이프사이클
+    // 라이프사이클
     // =====================================================================
     private void Awake()
     {
@@ -112,21 +110,23 @@ public class PokemonBattleManager : MonoBehaviour
         Instance = this;
         instance = this;
 
-        // 저장에서 미리 전달된 라운드 반영
         roundIndex = (_pendingRound <= 0) ? 1 : _pendingRound;
 
         InitializeBattleState();
-        BindCommandButtons();     // @ 인스펙터 버튼 + 배열형 호환 바인딩
-        BindSkillButtons();       // @ 스킬 버튼 4개 바인딩
-        BindSwitchButtons();      // @ 교체 버튼 바인딩
+        BindCommandButtons();
+        BindSkillButtons();
+        BindSwitchButtons();   // 플레이어 2슬롯
         BindGameOverButton();
         HideAllSubPanelsAtStart();
         UpdateRoundText();
         DecideFirstTurn();
-        ShowFirstTurnLog();
 
-        // @ 턴 시작 처리(명령 버튼 가시상태/스킬 쿨다운 UI 등)
-        OnTurnBegan();
+        if (commandRoot != null)
+        {
+            if (commandRoot.activeSelf == false) { commandRoot.SetActive(true); }
+        }
+        ApplyCommandInteractivityByLog();
+        ShowFirstTurnLog();
     }
 
     private void OnDestroy()
@@ -136,7 +136,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =====================================================================
-    // @ 초기화
+    // 초기화
     // =====================================================================
     private void InitializeBattleState()
     {
@@ -184,14 +184,15 @@ public class PokemonBattleManager : MonoBehaviour
                 otherInfo.ApplyBattleIdlePose();
             }
         }
+
+        RefreshSwitchButtonLabels();
     }
 
     // =====================================================================
-    // @ 버튼 바인딩
+    // 버튼 바인딩
     // =====================================================================
     private void BindCommandButtons()
     {
-        // @ 인스펙터 직접 연결 버튼 우선
         if (attackBt != null)
         {
             attackBt.onClick.RemoveAllListeners();
@@ -213,7 +214,6 @@ public class PokemonBattleManager : MonoBehaviour
             pokemonListBt.onClick.AddListener(OpenSwitch);
         }
 
-        // @ 배열형도 남겨서 호환 유지
         if (commandBts != null)
         {
             if (commandBts.Length > 0)
@@ -249,17 +249,6 @@ public class PokemonBattleManager : MonoBehaviour
                 }
             }
         }
-
-        // @ 초기 상태: 플레이어 턴이 아니면 루트 비활성
-        if (commandRoot != null)
-        {
-            bool active = isPlayerTurn ? true : false;
-            if (commandRoot.activeSelf != active)
-            {
-                commandRoot.SetActive(active ? true : false);
-            }
-        }
-        SetCommandsInteractable(isPlayerTurn ? true : false);
     }
 
     private void BindSkillButtons()
@@ -305,9 +294,8 @@ public class PokemonBattleManager : MonoBehaviour
     private void BindSwitchButtons()
     {
         if (switchButtons == null) { return; }
-        int len = switchButtons.Length;
 
-        if (len > 0)
+        if (switchButtons.Length > 0)
         {
             if (switchButtons[0] != null)
             {
@@ -315,7 +303,7 @@ public class PokemonBattleManager : MonoBehaviour
                 switchButtons[0].onClick.AddListener(OnClickSwitch0);
             }
         }
-        if (len > 1)
+        if (switchButtons.Length > 1)
         {
             if (switchButtons[1] != null)
             {
@@ -323,14 +311,7 @@ public class PokemonBattleManager : MonoBehaviour
                 switchButtons[1].onClick.AddListener(OnClickSwitch1);
             }
         }
-        if (len > 2)
-        {
-            if (switchButtons[2] != null)
-            {
-                switchButtons[2].onClick.RemoveAllListeners();
-                switchButtons[2].onClick.AddListener(OnClickSwitch2);
-            }
-        }
+
         RefreshSwitchButtonLabels();
     }
 
@@ -343,10 +324,7 @@ public class PokemonBattleManager : MonoBehaviour
         }
         if (gameOverPanel != null)
         {
-            if (gameOverPanel.activeSelf)
-            {
-                gameOverPanel.SetActive(false);
-            }
+            if (gameOverPanel.activeSelf) { gameOverPanel.SetActive(false); }
         }
     }
 
@@ -354,24 +332,15 @@ public class PokemonBattleManager : MonoBehaviour
     {
         if (ShopPanel != null) { ShopPanel.SetActive(false); }
         if (switchPanel != null) { switchPanel.SetActive(false); }
+        if (textLog != null) { textLog.gameObject.SetActive(false); }
     }
 
     // =====================================================================
-    // @ 커맨드
+    // 커맨드
     // =====================================================================
     public void OnClickAttackCommand()
     {
         if (!isPlayerTurn) { return; }
-
-        if (textLog != null)
-        {
-            if (myPokemonB != null)
-            {
-                textLog.text = myPokemonB.name + " 이 공격하였다";
-                textLog.gameObject.SetActive(true);
-            }
-        }
-
         StartCoroutine(PerformAttack(myPokemonB, otherPokemonB, -1));
     }
 
@@ -379,7 +348,8 @@ public class PokemonBattleManager : MonoBehaviour
     {
         if (!isPlayerTurn) { return; }
         SetSkillButtonsActive(true);
-        RefreshPlayerSkillCooldownUI();  // @ 열 때 한 번 더 쿨다운 반영
+        RefreshPlayerSkillCooldownUI();
+        ApplyCommandInteractivityByLog();
     }
 
     public void OpenSwitch()
@@ -389,6 +359,7 @@ public class PokemonBattleManager : MonoBehaviour
             RefreshSwitchButtonLabels();
             switchPanel.SetActive(true);
         }
+        ApplyCommandInteractivityByLog();
     }
 
     public void OnClickSkill0() { OnSkillClick(0); }
@@ -400,7 +371,6 @@ public class PokemonBattleManager : MonoBehaviour
     {
         if (!isPlayerTurn) { return; }
 
-        // @ 쿨다운 체크: playerTurnTick - lastUsed <= 1 이면 사용 불가
         bool allow = true;
         if (skillIdx >= 0)
         {
@@ -408,37 +378,11 @@ public class PokemonBattleManager : MonoBehaviour
             {
                 int last = playerLastUsedTurn[skillIdx];
                 int diff = playerTurnTick - last;
-                if (diff <= 1)
-                {
-                    allow = false;
-                }
+                if (diff <= 1) { allow = false; }
             }
         }
         if (!allow) { return; }
 
-        if (textLog != null)
-        {
-            if (myPokemonB != null)
-            {
-                string sName = "스킬";
-                if (myPokemonB.skillNames != null)
-                {
-                    bool okA = (skillIdx >= 0) ? true : false;
-                    if (okA)
-                    {
-                        bool okB = (skillIdx < myPokemonB.skillNames.Length) ? true : false;
-                        if (okB)
-                        {
-                            sName = myPokemonB.skillNames[skillIdx];
-                        }
-                    }
-                }
-                textLog.text = myPokemonB.name + " 이 " + sName + " 을 사용하였다";
-                textLog.gameObject.SetActive(true);
-            }
-        }
-
-        // @ 사용 턴 기록
         if (skillIdx >= 0)
         {
             if (skillIdx < playerLastUsedTurn.Length)
@@ -464,18 +408,17 @@ public class PokemonBattleManager : MonoBehaviour
         if (!active)
         {
             if (textLog != null) { textLog.gameObject.SetActive(false); }
+            ApplyCommandInteractivityByLog();
         }
     }
 
     private void SetCommandsInteractable(bool enable)
     {
-        // @ 인스펙터 버튼 우선
         if (attackBt != null) { attackBt.interactable = enable ? true : false; }
         if (bagBt != null) { bagBt.interactable = enable ? true : false; }
         if (skillsBt != null) { skillsBt.interactable = enable ? true : false; }
         if (pokemonListBt != null) { pokemonListBt.interactable = enable ? true : false; }
 
-        // @ 배열형 호환
         if (commandBts != null)
         {
             for (int i = 0; i < commandBts.Length; i = i + 1)
@@ -488,13 +431,14 @@ public class PokemonBattleManager : MonoBehaviour
         }
     }
 
-    private void SetCommandRootActive(bool active)
+    private void ApplyCommandInteractivityByLog()
     {
-        if (commandRoot == null) { return; }
-        if (commandRoot.activeSelf != active)
+        bool block = false;
+        if (textLog != null)
         {
-            commandRoot.SetActive(active ? true : false);
+            if (textLog.gameObject.activeSelf) { block = true; }
         }
+        SetCommandsInteractable(block ? true == false : true);
     }
 
     private void RefreshPlayerSkillCooldownUI()
@@ -510,71 +454,142 @@ public class PokemonBattleManager : MonoBehaviour
             {
                 int last = playerLastUsedTurn[i];
                 int diff = playerTurnTick - last;
-                if (diff <= 1)
-                {
-                    can = false;
-                }
+                if (diff <= 1) { can = false; }
             }
             b.interactable = can ? true : false;
         }
     }
 
     // =====================================================================
-    // @ 전투 실행
+    // 전투 실행(연출 -> 데미지 -> 로그 -> 상태정리 -> 턴전환)
     // =====================================================================
     private IEnumerator PerformAttack(Pokemon attacker, Pokemon defender, int skillIndex)
     {
         if (attacker == null) { yield break; }
         if (defender == null) { yield break; }
 
-        if (attacker.info != null)
+        if (textLog != null)
         {
-            attacker.info.ApplyAttackPose();
-            if (defender.info != null)
+            if (textLog.gameObject.activeSelf) { textLog.gameObject.SetActive(false); }
+        }
+        ApplyCommandInteractivityByLog();
+
+        PokemonInfo selfInfo = null;
+        PokemonInfo targetInfo = null;
+
+        if (attacker == myPokemonB)
+        {
+            selfInfo = myInfo;
+            targetInfo = otherInfo;
+        }
+        else
+        {
+            selfInfo = otherInfo;
+            targetInfo = myInfo;
+        }
+
+        if (selfInfo != null) { selfInfo.ApplyAttackPose(); }
+
+        bool isNormal = (skillIndex < 0) ? true : false;
+        bool isMelee = false;
+        bool isRanged = false;
+
+        if (!isNormal)
+        {
+            if (attacker.skillTypeBehaviours != null)
             {
-                attacker.info.SpriteMove(defender.info);
+                if (skillIndex < attacker.skillTypeBehaviours.Length)
+                {
+                    SkillTpye model = attacker.skillTypeBehaviours[skillIndex];
+                    if (model != null)
+                    {
+                        if (model is MeleeAttackType) { isMelee = true; }
+                        else
+                        {
+                            if (model is RangedAttackType) { isRanged = true; }
+                        }
+                    }
+                }
             }
         }
 
-        // @ 일반공격 FX
-        if (skillIndex < 0)
+        if (selfInfo != null)
         {
-            SpawnNormalAttackFxFor(attacker);
+            if (isNormal)
+            {
+                yield return StartCoroutine(selfInfo.NormalAttackSequence(targetInfo, NormalAttackFxPerfsb));
+            }
+            else
+            {
+                if (isMelee)
+                {
+                    yield return StartCoroutine(selfInfo.MeleeSkillSequence(targetInfo, NormalAttackFxPerfsb));
+                }
+                else
+                {
+                    if (isRanged)
+                    {
+                        yield return StartCoroutine(selfInfo.RangedSkillSequence(targetInfo, NormalAttackFxPerfsb));
+                    }
+                    else
+                    {
+                        yield return new WaitForSeconds(0.25f);
+                    }
+                }
+            }
         }
 
         yield return StartCoroutine(attacker.Attack(defender, skillIndex));
 
-        if (defender.info != null) { defender.info.ApplySkillPose(); }
-        yield return new WaitForSeconds(0.25f);
-        if (attacker.info != null) { attacker.info.ApplyBattleIdlePose(); }
-        if (defender.info != null) { defender.info.ApplyBattleIdlePose(); }
-
-        yield return new WaitForSeconds(0.35f);
-        if (textLog != null) { textLog.gameObject.SetActive(false); }
+        if (selfInfo != null) { selfInfo.ApplyBattleIdlePose(); }
+        if (targetInfo != null) { targetInfo.ApplyBattleIdlePose(); }
 
         yield return StartCoroutine(CheckAndResolveFaintStates());
         if (isGameOverShown) { yield break; }
 
-        // @ 턴 전환
+        string doneLabel = "공격";
+        if (!isNormal)
+        {
+            if (isMelee) { doneLabel = "근접 스킬"; }
+            else
+            {
+                if (isRanged) { doneLabel = "원거리 스킬"; }
+                else { doneLabel = "스킬"; }
+            }
+        }
+        if (textLog != null)
+        {
+            textLog.text = attacker.name + "의 " + doneLabel;
+            textLog.gameObject.SetActive(true);
+            ApplyCommandInteractivityByLog();
+        }
+        yield return new WaitForSeconds(0.75f);
+        if (textLog != null)
+        {
+            textLog.gameObject.SetActive(false);
+            ApplyCommandInteractivityByLog();
+        }
+
         isPlayerTurn = isPlayerTurn ? false : true;
 
         if (!isPlayerTurn)
         {
-            // @ 적 턴 시작 처리
-            OnTurnBegan();
-
+            enemyTurnTick = enemyTurnTick + 1;
             yield return StartCoroutine(EnemyActOnceThenPass());
             if (isGameOverShown) { yield break; }
 
-            // @ 적이 끝났으면 플레이어 턴 시작 처리
             isPlayerTurn = true;
-            OnTurnBegan();
+            playerTurnTick = playerTurnTick + 1;
+            RefreshPlayerSkillCooldownUI();
+            ApplyCommandInteractivityByLog();
+            UpdateRoundText();
         }
         else
         {
-            // @ 플레이어 턴 시작 처리
-            OnTurnBegan();
-            UpdateRoundText(); // @ 라운드 표시는 유지(라운드 증가 없음)
+            playerTurnTick = playerTurnTick + 1;
+            RefreshPlayerSkillCooldownUI();
+            ApplyCommandInteractivityByLog();
+            UpdateRoundText();
         }
     }
 
@@ -623,7 +638,6 @@ public class PokemonBattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(0.25f);
 
-        // @ 스킬 선택(쿨다운 중인 스킬 제외)
         bool willUseSkill = false;
         int chosenSkill = -1;
 
@@ -631,7 +645,6 @@ public class PokemonBattleManager : MonoBehaviour
         {
             if (otherPokemonB.skillNames.Length > 0)
             {
-                // @ 스킬 후보를 순회하며 첫 사용 가능 스킬 선택(단순 전략)
                 int sMax = 4;
                 if (otherPokemonB.skillNames.Length < sMax) { sMax = otherPokemonB.skillNames.Length; }
 
@@ -643,10 +656,7 @@ public class PokemonBattleManager : MonoBehaviour
                     {
                         int last = enemyLastUsedTurn[s];
                         int diff = enemyTurnTick - last;
-                        if (diff <= 1)
-                        {
-                            blocked = true;
-                        }
+                        if (diff <= 1) { blocked = true; }
                     }
                     if (!blocked)
                     {
@@ -661,14 +671,6 @@ public class PokemonBattleManager : MonoBehaviour
 
         if (willUseSkill)
         {
-            if (textLog != null)
-            {
-                string sName = otherPokemonB.skillNames[chosenSkill];
-                textLog.text = "적의 " + otherPokemonB.name + " 이 " + sName + " 을 사용하였다";
-                textLog.gameObject.SetActive(true);
-            }
-
-            // @ 적 스킬 사용 기록
             if (chosenSkill >= 0)
             {
                 if (chosenSkill < enemyLastUsedTurn.Length)
@@ -676,33 +678,26 @@ public class PokemonBattleManager : MonoBehaviour
                     enemyLastUsedTurn[chosenSkill] = enemyTurnTick;
                 }
             }
-
             yield return StartCoroutine(PerformAttack(otherPokemonB, myPokemonB, chosenSkill));
         }
         else
         {
-            if (textLog != null)
-            {
-                textLog.text = "적의 " + otherPokemonB.name + " 이 공격하였다";
-                textLog.gameObject.SetActive(true);
-            }
             yield return StartCoroutine(PerformAttack(otherPokemonB, myPokemonB, -1));
         }
 
-        // @ 적 턴 종료 -> 플레이어 턴으로 넘어감(상위에서 OnTurnBegan 호출)
         isPlayerTurn = true;
     }
 
     // =====================================================================
-    // @ 교체 및 라운드 증가 처리
+    // 교체 및 라운드 증가
     // =====================================================================
     private IEnumerator DoSwitchPlayer()
     {
-        Pokemon next = NextAliveAfterIndex(PokemonGamemanager.playerTeam3, PokemonGamemanager.playerActiveIndex);
-        myPokemonB = next;
-        if (myPokemonB != null)
+        int nextIdx = FindFirstAliveIndexExcept(PokemonGamemanager.playerTeam3, PokemonGamemanager.playerActiveIndex);
+        if (nextIdx >= 0)
         {
-            PokemonGamemanager.playerActiveIndex = IndexOf(PokemonGamemanager.playerTeam3, myPokemonB);
+            myPokemonB = PokemonGamemanager.playerTeam3[nextIdx];
+            PokemonGamemanager.playerActiveIndex = nextIdx;
             if (myInfo != null)
             {
                 myInfo.targetPokemon = myPokemonB;
@@ -710,16 +705,20 @@ public class PokemonBattleManager : MonoBehaviour
                 myInfo.ApplyBattleIdlePose();
             }
         }
+        else
+        {
+            myPokemonB = null;
+        }
         yield return null;
     }
 
     private IEnumerator DoSwitchEnemy()
     {
-        Pokemon next = NextAliveAfterIndex(PokemonGamemanager.enemyTeam3, PokemonGamemanager.enemyActiveIndex);
-        if (next != null)
+        int nextIdx = FindFirstAliveIndexExcept(PokemonGamemanager.enemyTeam3, PokemonGamemanager.enemyActiveIndex);
+        if (nextIdx >= 0)
         {
-            otherPokemonB = next;
-            PokemonGamemanager.enemyActiveIndex = IndexOf(PokemonGamemanager.enemyTeam3, otherPokemonB);
+            otherPokemonB = PokemonGamemanager.enemyTeam3[nextIdx];
+            PokemonGamemanager.enemyActiveIndex = nextIdx;
             if (otherInfo != null)
             {
                 otherInfo.targetPokemon = otherPokemonB;
@@ -730,7 +729,7 @@ public class PokemonBattleManager : MonoBehaviour
             yield break;
         }
 
-        // @ 여기까지 왔다면 적 팀 전멸 @ 라운드 증가
+        // @ 적 팀 전멸 -> 라운드 증가
         yield return StartCoroutine(OnEnemyTeamClearedAndIncreaseRound());
     }
 
@@ -740,8 +739,14 @@ public class PokemonBattleManager : MonoBehaviour
         {
             textLog.text = "라운드 클리어!";
             textLog.gameObject.SetActive(true);
+            ApplyCommandInteractivityByLog();
         }
         yield return new WaitForSeconds(0.6f);
+        if (textLog != null)
+        {
+            textLog.gameObject.SetActive(false);
+            ApplyCommandInteractivityByLog();
+        }
 
         HandleRoundClear();
         yield return null;
@@ -761,13 +766,10 @@ public class PokemonBattleManager : MonoBehaviour
 
         RebuildEnemyTeamForNextRound();
         DecideFirstTurn();
-        ShowFirstTurnLog();
-        OnTurnBegan();  // @ 새 라운드 첫 턴 시작 처리
     }
 
     private void RebuildEnemyTeamForNextRound()
     {
-        // @ 적 팀 3마리 무작위 구성(중복 없음)
         List<int> pool = new List<int>();
         pool.Add(0);
         pool.Add(1);
@@ -804,7 +806,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =====================================================================
-    // @ 상점 단순 로직
+    // 상점(플레이어만)
     // =====================================================================
     private enum ShopKind { HealHP, BuffATK, BuffDEF, BuffSPD }
     private struct ShopItem { public ShopKind kind; public int value; public string label; }
@@ -812,14 +814,9 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void OpenShop()
     {
-        if (!isPlayerTurn)
-        {
-            StartCoroutine(EnemyActOnceThenPass());
-            return;
-        }
-
-        if (ShopPanel == null) { StartCoroutine(EnemyActOnceThenPass()); return; }
-        if (shopItemButtons == null) { StartCoroutine(EnemyActOnceThenPass()); return; }
+        if (!isPlayerTurn) { StartCoroutine(EnemyActOnceThenPass()); return; }
+        if (ShopPanel == null) { return; }
+        if (shopItemButtons == null) { return; }
 
         _currentShopItems.Clear();
         _currentShopItems.Add(RandomShopItem());
@@ -842,11 +839,28 @@ public class PokemonBattleManager : MonoBehaviour
             shopItemButtons[i].onClick.RemoveAllListeners();
         }
 
-        if (shopItemButtons.Length > 0 && shopItemButtons[0] != null) { shopItemButtons[0].onClick.AddListener(OnClickShop0); }
-        if (shopItemButtons.Length > 1 && shopItemButtons[1] != null) { shopItemButtons[1].onClick.AddListener(OnClickShop1); }
-        if (shopItemButtons.Length > 2 && shopItemButtons[2] != null) { shopItemButtons[2].onClick.AddListener(OnClickShop2); }
-        if (shopItemButtons.Length > 3 && shopItemButtons[3] != null) { shopItemButtons[3].onClick.AddListener(OnClickShop3); }
-        if (shopItemButtons.Length > 4 && shopItemButtons[4] != null) { shopItemButtons[4].onClick.AddListener(OnClickShop4); }
+        if (shopItemButtons.Length > 0)
+        {
+            if (shopItemButtons[0] != null) { shopItemButtons[0].onClick.AddListener(OnClickShop0); }
+        }
+        if (shopItemButtons.Length > 1)
+        {
+            if (shopItemButtons[1] != null) { shopItemButtons[1].onClick.AddListener(OnClickShop1); }
+        }
+        if (shopItemButtons.Length > 2)
+        {
+            if (shopItemButtons[2] != null) { shopItemButtons[2].onClick.AddListener(OnClickShop2); }
+        }
+        if (shopItemButtons.Length > 3)
+        {
+            if (shopItemButtons[3] != null) { shopItemButtons[3].onClick.AddListener(OnClickShop3); }
+        }
+        if (shopItemButtons.Length > 4)
+        {
+            if (shopItemButtons[4] != null) { shopItemButtons[4].onClick.AddListener(OnClickShop4); }
+        }
+
+        ApplyCommandInteractivityByLog();
     }
 
     public void OnClickShop0() { UseShopItemIndex(0); }
@@ -865,7 +879,6 @@ public class PokemonBattleManager : MonoBehaviour
         if (ShopPanel != null) { ShopPanel.SetActive(false); }
 
         isPlayerTurn = false;
-        OnTurnBegan();  // @ 적 턴 시작 처리
         StartCoroutine(EnemyActOnceThenPass());
     }
 
@@ -918,11 +931,106 @@ public class PokemonBattleManager : MonoBehaviour
         {
             textLog.text = p.name + " 아이템 사용";
             textLog.gameObject.SetActive(true);
+            ApplyCommandInteractivityByLog();
         }
     }
 
     // =====================================================================
-    // @ 유틸
+    // 스위치(플레이어 2슬롯)
+    // =====================================================================
+    public void OnClickSwitch0() { OnClickSwitchIndex(0); }
+    public void OnClickSwitch1() { OnClickSwitchIndex(1); }
+
+    private void OnClickSwitchIndex(int slot)
+    {
+        if (!isPlayerTurn) { return; }
+        if (slot < 0) { return; }
+        if (slot >= _switchSlotToTeamIndex.Length) { return; }
+
+        int teamIdx = _switchSlotToTeamIndex[slot];
+        if (teamIdx < 0) { return; }
+
+        Pokemon[] team = PokemonGamemanager.playerTeam3;
+        if (team == null) { return; }
+        if (teamIdx >= team.Length) { return; }
+        if (teamIdx == PokemonGamemanager.playerActiveIndex) { return; }
+
+        Pokemon cand = team[teamIdx];
+        if (cand == null) { return; }
+        if (cand.Hp <= 0) { return; }
+
+        myPokemonB = cand;
+        PokemonGamemanager.playerActiveIndex = teamIdx;
+
+        if (myInfo != null)
+        {
+            myInfo.targetPokemon = myPokemonB;
+            myPokemonB.info = myInfo;
+            myInfo.ApplyBattleIdlePose();
+        }
+
+        if (switchPanel != null) { switchPanel.SetActive(false); }
+    }
+
+    private void RefreshSwitchButtonLabels()
+    {
+        if (switchButtons == null) { return; }
+        Pokemon[] team = PokemonGamemanager.playerTeam3;
+        int activeIdx = PokemonGamemanager.playerActiveIndex;
+
+        List<int> candidates = new List<int>();
+        if (team != null)
+        {
+            for (int i = 0; i < team.Length; i = i + 1)
+            {
+                if (i == activeIdx) { continue; }
+                Pokemon p = team[i];
+                if (p != null)
+                {
+                    if (p.Hp > 0) { candidates.Add(i); }
+                }
+            }
+        }
+
+        int slotsToFill = (switchButtons.Length >= 2) ? 2 : switchButtons.Length;
+
+        for (int slot = 0; slot < slotsToFill; slot = slot + 1)
+        {
+            Button bt = switchButtons[slot];
+            if (bt == null) { continue; }
+
+            int mappedIdx = (slot < candidates.Count) ? candidates[slot] : -1;
+            _switchSlotToTeamIndex[slot] = mappedIdx;
+
+            TextMeshProUGUI label = bt.GetComponentInChildren<TextMeshProUGUI>();
+            if (mappedIdx >= 0)
+            {
+                Pokemon p = team[mappedIdx];
+                if (label != null)
+                {
+                    label.text = (p != null) ? p.name : "-";
+                }
+                bt.interactable = true;
+            }
+            else
+            {
+                if (label != null) { label.text = "-"; }
+                bt.interactable = false;
+            }
+        }
+
+        for (int slot = 2; slot < switchButtons.Length; slot = slot + 1)
+        {
+            Button bt = switchButtons[slot];
+            if (bt == null) { continue; }
+            TextMeshProUGUI label = bt.GetComponentInChildren<TextMeshProUGUI>();
+            if (label != null) { label.text = "-"; }
+            bt.interactable = false;
+        }
+    }
+
+    // =====================================================================
+    // 유틸
     // =====================================================================
     private static Pokemon FirstAlive(Pokemon[] team)
     {
@@ -948,20 +1056,19 @@ public class PokemonBattleManager : MonoBehaviour
         return -1;
     }
 
-    private static Pokemon NextAliveAfterIndex(Pokemon[] team, int startExclusive)
+    private static int FindFirstAliveIndexExcept(Pokemon[] team, int activeIndex)
     {
-        if (team == null) { return null; }
-        int idx = startExclusive + 1;
-        while (idx < team.Length)
+        if (team == null) { return -1; }
+        for (int i = 0; i < team.Length; i = i + 1)
         {
-            Pokemon cand = team[idx];
-            if (cand != null)
+            if (i == activeIndex) { continue; }
+            Pokemon p = team[i];
+            if (p != null)
             {
-                if (cand.Hp > 0) { return cand; }
+                if (p.Hp > 0) { return i; }
             }
-            idx = idx + 1;
         }
-        return null;
+        return -1;
     }
 
     public static Pokemon CreateByIndexShared(Pokemon.PokemonIndex idx, bool isPlayerSide)
@@ -1035,7 +1142,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     // =====================================================================
-    // @ 라운드 UI/턴 결정/로그
+    // 라운드 UI/선턴
     // =====================================================================
     private void UpdateRoundText()
     {
@@ -1047,27 +1154,12 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void DecideFirstTurn()
     {
-        if (myPokemonB == null)
-        {
-            isPlayerTurn = true;
-            return;
-        }
-        if (otherPokemonB == null)
-        {
-            isPlayerTurn = true;
-            return;
-        }
+        if (myPokemonB == null) { isPlayerTurn = true; return; }
+        if (otherPokemonB == null) { isPlayerTurn = true; return; }
 
-        if (myPokemonB.speed > otherPokemonB.speed)
-        {
-            isPlayerTurn = true;
-            return;
-        }
-        if (myPokemonB.speed < otherPokemonB.speed)
-        {
-            isPlayerTurn = false;
-            return;
-        }
+        if (myPokemonB.speed > otherPokemonB.speed) { isPlayerTurn = true; return; }
+        if (myPokemonB.speed < otherPokemonB.speed) { isPlayerTurn = false; return; }
+
         bool odd = (roundIndex % 2 == 1) ? true : false;
         isPlayerTurn = odd ? true : false;
     }
@@ -1078,6 +1170,7 @@ public class PokemonBattleManager : MonoBehaviour
         string msg = isPlayerTurn ? "선제공격 판정 성공" : "선제공격 판정 실패";
         textLog.text = msg;
         textLog.gameObject.SetActive(true);
+        ApplyCommandInteractivityByLog();
         StartCoroutine(HideLogAfter(0.75f));
     }
 
@@ -1087,152 +1180,12 @@ public class PokemonBattleManager : MonoBehaviour
         if (textLog != null)
         {
             textLog.gameObject.SetActive(false);
-        }
-    }
-
-    private void OnTurnBegan()
-    {
-        if (isPlayerTurn)
-        {
-            playerTurnTick = playerTurnTick + 1;
-            SetCommandRootActive(true);
-            SetCommandsInteractable(true);
-            RefreshPlayerSkillCooldownUI();
-        }
-        else
-        {
-            enemyTurnTick = enemyTurnTick + 1;
-            SetCommandsInteractable(false);
-            SetCommandRootActive(false);
+            ApplyCommandInteractivityByLog();
         }
     }
 
     // =====================================================================
-    // @ 스위치 버튼/라벨, 일반공격 FX
-    // =====================================================================
-    private void RefreshSwitchButtonLabels()
-    {
-        if (switchButtons == null) { return; }
-        Pokemon[] team = PokemonGamemanager.playerTeam3;
-        int activeIdx = PokemonGamemanager.playerActiveIndex;
-
-        for (int i = 0; i < switchButtons.Length; i = i + 1)
-        {
-            Button bt = switchButtons[i];
-            if (bt == null) { continue; }
-
-            TextMeshProUGUI label = bt.GetComponentInChildren<TextMeshProUGUI>();
-            string textOut = "-";
-            bool interact = false;
-
-            if (team != null)
-            {
-                if (i < team.Length)
-                {
-                    Pokemon p = team[i];
-                    if (p != null)
-                    {
-                        textOut = p.name;
-                        if (p.Hp > 0)
-                        {
-                            if (i != activeIdx) { interact = true; }
-                        }
-                    }
-                }
-            }
-
-            if (label != null) { label.text = textOut; }
-            bt.interactable = interact ? true : false;
-        }
-    }
-
-    private void SpawnNormalAttackFxFor(Pokemon attacker)
-    {
-        if (attacker == null) { return; }
-
-        bool isPlayer = false;
-        if (attacker == myPokemonB) { isPlayer = true; }
-
-        GameObject fxPrefab = null;
-        if (isPlayer)
-        {
-            fxPrefab = playerNormalAttackFxPrefab;
-        }
-        else
-        {
-            fxPrefab = enemyNormalAttackFxPrefab;
-        }
-        if (fxPrefab == null) { return; }
-
-        Transform anchor = null;
-        if (isPlayer)
-        {
-            if (playerFxAnchor != null) { anchor = playerFxAnchor; }
-            else
-            {
-                if (myInfo != null)
-                {
-                    if (myInfo.image != null) { anchor = myInfo.image.transform; }
-                }
-            }
-        }
-        else
-        {
-            if (enemyFxAnchor != null) { anchor = enemyFxAnchor; }
-            else
-            {
-                if (otherInfo != null)
-                {
-                    if (otherInfo.image != null) { anchor = otherInfo.image.transform; }
-                }
-            }
-        }
-        if (anchor == null) { return; }
-
-        GameObject go = GameObject.Instantiate(fxPrefab, anchor.position, Quaternion.identity);
-        go.transform.SetParent(anchor, true);
-        GameObject.Destroy(go, 2f);
-    }
-
-    // @ 교체 버튼 동작
-    public void OnClickSwitch0() { OnClickSwitchIndex(0); }
-    public void OnClickSwitch1() { OnClickSwitchIndex(1); }
-    public void OnClickSwitch2() { OnClickSwitchIndex(2); }
-
-    private void OnClickSwitchIndex(int idx)
-    {
-        if (!isPlayerTurn) { return; }
-
-        Pokemon[] team = PokemonGamemanager.playerTeam3;
-        if (team == null) { return; }
-        if (idx < 0) { return; }
-        if (idx >= team.Length) { return; }
-
-        if (idx == PokemonGamemanager.playerActiveIndex) { return; }
-
-        Pokemon cand = team[idx];
-        if (cand == null) { return; }
-        if (cand.Hp <= 0) { return; }
-
-        myPokemonB = cand;
-        PokemonGamemanager.playerActiveIndex = idx;
-
-        if (myInfo != null)
-        {
-            myInfo.targetPokemon = myPokemonB;
-            myPokemonB.info = myInfo;
-            myInfo.ApplyBattleIdlePose();
-        }
-
-        if (switchPanel != null) { switchPanel.SetActive(false); }
-
-        isPlayerTurn = false;
-        OnTurnBegan();
-        StartCoroutine(EnemyActOnceThenPass());
-    }
-
-    // =====================================================================
-    // @ 게임오버 처리
+    // 게임오버
     // =====================================================================
     private void ShowGameOver(string message)
     {
@@ -1240,8 +1193,8 @@ public class PokemonBattleManager : MonoBehaviour
         isGameOverShown = true;
 
         SetCommandsInteractable(false);
+        if (commandRoot != null) { commandRoot.SetActive(false); }
         SetSkillButtonsActive(false);
-        SetCommandRootActive(false);
 
         if (textLog != null)
         {
@@ -1261,6 +1214,6 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void OnClickGameOverOK()
     {
-        SceneManager.LoadScene(0);  // @ PokemonStart
+        SceneManager.LoadScene(0);  // PokemonStart
     }
 }
