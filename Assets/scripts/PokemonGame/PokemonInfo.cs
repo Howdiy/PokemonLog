@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine.U2D;
 
 /// <summary>
-/// @ 전투 화면에서 포켓몬 1개에 대응되는 UI/스프라이트 제어
+/// @ 배틀 씬에서 포켓몬 표시와 연출을 담당
 /// </summary>
 public class PokemonInfo : MonoBehaviour
 {
@@ -14,240 +14,75 @@ public class PokemonInfo : MonoBehaviour
     public TextMeshProUGUI hpText;
 
     public PokemonBattleManager BattleGameManager;
-
+    // 아틀라스에 저장된 이미지를 상황별로 분리
     public Sprite choiceSprite;
     public Sprite battleIdleSprite;
-    public Sprite skillSprite;
-    public Sprite attackSprite;
+    public Sprite attackPoseSprite;
+    public Sprite skillPoseSprite;
 
     public Pokemon targetPokemon;
-
+    // 스프라이트 아틀라스 불러오기
     private SpriteAtlas _atlas;
-    private string _currentAtlasName;
-    private bool _isMoving;
+    private bool _isMoving = false;
 
-    void Awake()
+    private void Awake()
     {
-        if (BattleGameManager == null)
-        {
-            BattleGameManager = FindObjectOfType<PokemonBattleManager>();
-        }
-    }
-
-    private void Start()
-    {
+        LoadAtlasIfNeeded();
         ApplyBattleIdlePose();
+        ApplyNameAndHp();
     }
 
-    // ========= 이동(선형 보간) 유틸 =========
-    private IEnumerator MoveImageOnce(Vector3 from, Vector3 to, float dur)
+    private void Update()
     {
-        float t = 0f;
-        while (t < 1f)
-        {
-            t = t + (Time.deltaTime / (dur <= 0f ? 0.0001f : dur));
-            if (image != null)
-            {
-                image.transform.position = Vector3.Lerp(from, to, t);
-            }
-            yield return null;
-        }
+        ApplyNameAndHp();
     }
 
-    // ========= 전투 연출: 일반공격 =========
-    /// <summary>
-    /// @ 일반공격 시퀀스
-    /// @ 1) 공격자 스프라이트가 수비자까지의 2/3 지점까지 이동
-    /// @ 2) 수비자 위치에 NormalAttackFxPerfsb 프리팹 1회 재생 후 삭제
-    /// @ 3) 공격자 원위치 복귀
-    /// </summary>
-    public IEnumerator NormalAttackSequence(PokemonInfo defenderInfo, GameObject normalFx)
+    /// <summary> 아틀라스 로드 </summary>
+    private void LoadAtlasIfNeeded()
     {
-        if (_isMoving) { yield break; }
-        if (image == null) { yield break; }
-
-        _isMoving = true;
-
-        Vector3 startPos = image.transform.position;
-        Vector3 defPos = startPos;
-        if (defenderInfo != null)
-        {
-            if (defenderInfo.image != null)
-            {
-                defPos = defenderInfo.image.transform.position;
-            }
-        }
-
-        Vector3 twoThird = startPos + ((defPos - startPos) * 0.6666667f);
-
-        // 1) 2/3 지점까지
-        yield return StartCoroutine(MoveImageOnce(startPos, twoThird, 0.2f));
-
-        // 2) 수비자 위치에 FX 1회
-        if (normalFx != null)
-        {
-            Vector3 spawnPos = defPos;
-            GameObject fx = GameObject.Instantiate(normalFx, spawnPos, Quaternion.identity);
-            fx.transform.SetParent(transform.parent, true);
-            GameObject.Destroy(fx, 1.25f);
-            yield return new WaitForSeconds(0.25f);
-        }
-
-        // 3) 원위치 복귀
-        yield return StartCoroutine(MoveImageOnce(twoThird, startPos, 0.2f));
-
-        _isMoving = false;
+        if (_atlas != null) { return; }
+        if (targetPokemon == null) { return; }
+        if (string.IsNullOrEmpty(targetPokemon.atlasResourcePath)) { return; }
+        _atlas = Resources.Load<SpriteAtlas>(targetPokemon.atlasResourcePath);
     }
 
-    // ========= 전투 연출: 근접 스킬 =========
-    /// <summary>
-    /// @ 근접공격 타입 스킬
-    /// @ 1) 공격자 2/3 지점까지 이동
-    /// @ 2) 공격자 위치에서 FX 생성 -> 수비자 위치까지 FX 이동 -> 도착 시 1회 재생 후 삭제
-    /// @ 3) 공격자 원위치 복귀
-    /// </summary>
-    public IEnumerator MeleeSkillSequence(PokemonInfo defenderInfo, GameObject effectFx)
+    /// <summary> '이름, HP'텍스트 반영 </summary>
+    private void ApplyNameAndHp()
     {
-        if (_isMoving) { yield break; }
-        if (image == null) { yield break; }
-
-        _isMoving = true;
-
-        Vector3 startPos = image.transform.position;
-        Vector3 defPos = startPos;
-        if (defenderInfo != null)
-        {
-            if (defenderInfo.image != null)
-            {
-                defPos = defenderInfo.image.transform.position;
-            }
-        }
-
-        Vector3 twoThird = startPos + ((defPos - startPos) * 0.6666667f);
-
-        // 1) 2/3 지점까지
-        yield return StartCoroutine(MoveImageOnce(startPos, twoThird, 0.2f));
-
-        // 2) FX 이동
-        if (effectFx != null)
-        {
-            GameObject fx = GameObject.Instantiate(effectFx, startPos, Quaternion.identity);
-            fx.transform.SetParent(transform.parent, true);
-
-            float t = 0f;
-            float dur = 0.25f;
-            while (t < 1f)
-            {
-                t = t + (Time.deltaTime / (dur <= 0f ? 0.0001f : dur));
-                fx.transform.position = Vector3.Lerp(startPos, defPos, t);
-                yield return null;
-            }
-
-            // 도착 후 약간 유지 후 삭제
-            yield return new WaitForSeconds(0.15f);
-            GameObject.Destroy(fx);
-        }
-
-        // 3) 원위치 복귀
-        yield return StartCoroutine(MoveImageOnce(twoThird, startPos, 0.2f));
-
-        _isMoving = false;
+        if (targetPokemon == null) { return; }
+        if (nameText != null) { nameText.text = targetPokemon.name; }
+        if (hpText != null) { hpText.text = "HP " + targetPokemon.Hp.ToString(); }
     }
 
-    // ========= 전투 연출: 원거리 스킬 =========
-    /// <summary>
-    /// @ 원거리공격 타입 스킬
-    /// @ 1) 공격자 위치에서 FX 생성
-    /// @ 2) 수비자 위치까지 FX 이동
-    /// @ 3) 도착 시 FX 삭제
-    /// </summary>
-    public IEnumerator RangedSkillSequence(PokemonInfo defenderInfo, GameObject effectFx)
-    {
-        if (image == null) { yield break; }
-
-        Vector3 startPos = image.transform.position;
-        Vector3 defPos = startPos;
-        if (defenderInfo != null)
-        {
-            if (defenderInfo.image != null)
-            {
-                defPos = defenderInfo.image.transform.position;
-            }
-        }
-
-        if (effectFx != null)
-        {
-            GameObject fx = GameObject.Instantiate(effectFx, startPos, Quaternion.identity);
-            fx.transform.SetParent(transform.parent, true);
-
-            float t = 0f;
-            float dur = 0.25f;
-            while (t < 1f)
-            {
-                t = t + (Time.deltaTime / (dur <= 0f ? 0.0001f : dur));
-                fx.transform.position = Vector3.Lerp(startPos, defPos, t);
-                yield return null;
-            }
-            GameObject.Destroy(fx);
-        }
-        else
-        {
-            // FX가 없으면 최소 연출 텀만 제공
-            yield return new WaitForSeconds(0.25f);
-        }
-    }
-
-    // ========= 포즈 =========
+    /// <summary> 배틀 대기 포즈 </summary>
     public void ApplyBattleIdlePose()
     {
-        if (targetPokemon == null) { return; }
-        LoadAtlasIfNeeded(targetPokemon.atlasResourcePath);
-        SetSpriteFromAtlas(targetPokemon.spriteKeyBattleIdle);
-
-        if (nameText != null) { nameText.text = targetPokemon.name; }
-        if (hpText != null) { hpText.text = targetPokemon.Hp.ToString(); }
+        LoadAtlasIfNeeded();
+        SetSpriteByKey(targetPokemon != null ? targetPokemon.spriteKeyBattleIdle : "", battleIdleSprite);
     }
 
+    /// <summary> 공격 포즈 </summary>
     public void ApplyAttackPose()
     {
-        if (targetPokemon == null) { return; }
-        LoadAtlasIfNeeded(targetPokemon.atlasResourcePath);
-        SetSpriteFromAtlas(targetPokemon.spriteKeyAttack);
+        LoadAtlasIfNeeded();
+        SetSpriteByKey(targetPokemon != null ? targetPokemon.spriteKeyAttack : "", attackPoseSprite);
     }
 
+    /// <summary> 스킬 포즈 </summary>
     public void ApplySkillPose()
     {
-        if (targetPokemon == null) { return; }
-        LoadAtlasIfNeeded(targetPokemon.atlasResourcePath);
-        SetSpriteFromAtlas(targetPokemon.spriteKeySkill);
+        LoadAtlasIfNeeded();
+        SetSpriteByKey(targetPokemon != null ? targetPokemon.spriteKeySkill : "", skillPoseSprite);
     }
 
-    // ========= 유틸 =========
-    private void LoadAtlasIfNeeded(string path)
-    {
-        if (string.IsNullOrEmpty(path))
-        {
-            _atlas = null;
-            _currentAtlasName = string.Empty;
-            return;
-        }
-
-        if (_atlas != null)
-        {
-            if (_currentAtlasName == path) { return; }
-        }
-
-        _atlas = PokemonSpriteAtlasProvider.GetAtlas(path);
-        _currentAtlasName = path;
-    }
-
-    private void SetSpriteFromAtlas(string spriteName)
+    /// <summary> 키에 맞는 스프라이트 세팅 </summary>
+    private void SetSpriteByKey(string spriteKey, Sprite fallback)
     {
         if (_atlas != null)
         {
-            if (!string.IsNullOrEmpty(spriteName))
+            if (!string.IsNullOrEmpty(spriteKey))
             {
-                Sprite sp = _atlas.GetSprite(spriteName);
+                Sprite sp = _atlas.GetSprite(spriteKey);
                 if (sp != null)
                 {
                     if (image != null) { image.sprite = sp; }
@@ -255,9 +90,117 @@ public class PokemonInfo : MonoBehaviour
                 }
             }
         }
-        if (battleIdleSprite != null)
+        if (fallback != null)
         {
-            if (image != null) { image.sprite = battleIdleSprite; }
+            if (image != null) { image.sprite = fallback; }
         }
+    }
+
+    /// <summary> 자신의 스프라이트를 타겟의 2/3 지점까지 왕복 이동 </summary>
+    private IEnumerator DashToTwoThirdAndBack(PokemonInfo target)
+    {
+        if (_isMoving) { yield break; }
+        _isMoving = true;
+
+        Transform myTr = (image != null) ? image.transform : this.transform;
+        Transform tgTr = (target != null && target.image != null) ? target.image.transform : null;
+
+        Vector3 startPos = myTr.position;
+        Vector3 targetPos = startPos;
+
+        if (tgTr != null)
+        {
+            Vector3 dir = tgTr.position - startPos;
+            targetPos = startPos + dir * 0.66f;
+        }
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t = t + Time.deltaTime * 2f;
+            myTr.position = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        while (t > 0f)
+        {
+            t = t - Time.deltaTime * 2f;
+            myTr.position = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        _isMoving = false;
+    }
+
+    /// <summary> 프리팹을 특정 위치에 1회 재생 후 파괴 </summary>
+    private IEnumerator SpawnFxOnce(GameObject prefab, Vector3 pos, Transform parent)
+    {
+        if (prefab == null) { yield break; }
+        GameObject fx = GameObject.Instantiate(prefab, pos, Quaternion.identity, parent);
+        yield return new WaitForSeconds(0.6f);
+        if (fx != null)
+        {
+            GameObject.Destroy(fx);
+        }
+    }
+
+    /// 연출 시퀀스
+
+    // 일반 공격: 2/3 지점 왕복 + 수비쪽 위치에서 FX 한번만
+    public IEnumerator NormalAttackSequence(PokemonInfo target, GameObject normalFx)
+    {
+        yield return StartCoroutine(DashToTwoThirdAndBack(target));
+
+        if (target != null)
+        {
+            Transform tgTr = (target.image != null) ? target.image.transform : target.transform;
+            Vector3 pos = tgTr.position;
+            Transform parent = tgTr;
+            yield return StartCoroutine(SpawnFxOnce(normalFx, pos, parent));
+        }
+    }
+
+    // 근접 스킬: 2/3 지점 왕복 + 타겟 위치 FX 1회(추후 확장)
+    public IEnumerator MeleeSkillSequence(PokemonInfo target, GameObject fx)
+    {
+        yield return StartCoroutine(DashToTwoThirdAndBack(target));
+
+        if (target != null)
+        {
+            Transform tgTr = (target.image != null) ? target.image.transform : target.transform;
+            Vector3 pos = tgTr.position;
+            Transform parent = tgTr;
+            yield return StartCoroutine(SpawnFxOnce(fx, pos, parent));
+        }
+    }
+
+    // 원거리 스킬: 현재는 타겟 위치 FX 1회(추후 이동 연출 확장)
+    public IEnumerator RangedSkillSequence(PokemonInfo target, GameObject fx)
+    {
+        if (target != null)
+        {
+            Transform tgTr = (target.image != null) ? target.image.transform : target.transform;
+            Vector3 pos = tgTr.position;
+            Transform parent = tgTr;
+            yield return StartCoroutine(SpawnFxOnce(fx, pos, parent));
+        }
+    }
+
+    // 회복 스킬: 자신의 위치에서 FX 한번만
+    public IEnumerator HealSkillSequence(GameObject fx)
+    {
+        Transform myTr = (image != null) ? image.transform : this.transform;
+        Vector3 pos = myTr.position;
+        Transform parent = myTr;
+        yield return StartCoroutine(SpawnFxOnce(fx, pos, parent));
+    }
+
+    // 방어 스킬: 자신의 위치에서 FX 한번만
+    public IEnumerator DefenseSkillSequence(GameObject fx)
+    {
+        Transform myTr = (image != null) ? image.transform : this.transform;
+        Vector3 pos = myTr.position;
+        Transform parent = myTr;
+        yield return StartCoroutine(SpawnFxOnce(fx, pos, parent));
     }
 }

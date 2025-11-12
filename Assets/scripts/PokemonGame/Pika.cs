@@ -24,9 +24,9 @@ public class Pika : Pokemon
 
         atlasResourcePath = "PikaSpriteAtlas";
         spriteKeyChoice = "PIKACH";
-        spriteKeyBattleIdle = "pika2";
-        spriteKeyAttack = "pika4";
-        spriteKeySkill = "pika3";
+        spriteKeyBattleIdle = "PIKA2";
+        spriteKeyAttack = "PIKA4";
+        spriteKeySkill = "PIKA3";
     }
 
     public override string Skill1() { return "Àü±â¼îÅ©"; }

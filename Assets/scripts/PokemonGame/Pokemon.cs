@@ -4,8 +4,7 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// @ 포켓몬 기본 모델
-/// @ MonoBehaviour 미상속 @ 순수 데이터 및 전투 로직 컨테이너
+/// @ 포켓몬 기본 모델 @ MonoBehaviour 미상속
 /// </summary>
 public class Pokemon
 {
@@ -15,8 +14,7 @@ public class Pokemon
         fire,
         water,
         grass,
-        elec,
-        nomel    // @ 요청 사항 @ 타입 확장 자리만 추가 @ 현재 상성 행렬에는 미사용
+        elec
     }
 
     /// <summary> 인덱스 </summary>
@@ -28,14 +26,13 @@ public class Pokemon
         eSang
     }
 
-    /// <summary> 스킬 분류 </summary>
-    public enum SkillType
+    /// <summary> 타입 상성 </summary>
+    enum SkillType
     {
         atkSk,
         defSk,
         hpSk
     }
-
     public Tpye type;
     public PokemonIndex index;
     public PokemonInfo info;
@@ -43,7 +40,6 @@ public class Pokemon
     public string name;
 
     private int hp;
-
     public string spriteKeyAttack = "";
     public string spriteKeySkill = "";
     public int atk;
@@ -51,21 +47,19 @@ public class Pokemon
     public int speed;
 
     /// <summary> 타입 상성 배율 </summary>
-    const float h = 0.5f; // @ 하프
-    const float n = 1f;   // @ 노말
-    const float g = 2f;   // @ 굿
+    const float h = 0.5f;
+    const float n = 1f;
+    const float g = 2f;
 
-    /// <summary> 포즈 및 아틀라스 로딩 보조 필드 </summary>
+    /// <summary> 아틀라스 키 </summary>
     public string atlasResourcePath = "";
     public string spriteKeyChoice = "";
     public string spriteKeyBattleIdle = "";
-
-    // @ 신규 명칭 매핑
     public string spriteKeyAtk = "";
     public string spriteKeyDef = "";
     public string spriteKeyHp = "";
 
-    /// <summary> 스킬 이름 4슬롯 </summary>
+    /// <summary> 스킬 이름 </summary>
     public string[] skillNames = new string[4];
 
     /// <summary> 스킬 타입 동작 모델 </summary>
@@ -80,13 +74,7 @@ public class Pokemon
         set
         {
             hp = value;
-            if (info != null)
-            {
-                if (info.hpText != null)
-                {
-                    info.hpText.text = hp.ToString();
-                }
-            }
+            if (hp < 0) { hp = 0; }
         }
     }
 
@@ -98,13 +86,13 @@ public class Pokemon
         skillNames[2] = Skill3();
         skillNames[3] = Skill4();
 
-        // @ 기본 매핑 @ 자식에서 덮어씀 가능
+        // 포켓몬의 스킬 매핑
         skillTypeBehaviours[0] = new MeleeAttackType();
         skillTypeBehaviours[1] = new RangedAttackType();
         skillTypeBehaviours[2] = new DefenseType();
         skillTypeBehaviours[3] = new HealType();
 
-        // @ 기본 개체값
+        // 포켓몬 초기 개체값
         Hp = Random.Range(0, 32);
         atk = Random.Range(0, 32);
         def = Random.Range(0, 32);
@@ -127,30 +115,81 @@ public class Pokemon
     public virtual string Skill4() { return "공격"; }
 
     /// <summary>
-    /// @ 전투 1행동 코루틴
-    /// @ skillIndex < 0 = 일반공격, skillIndex >= 0 = 스킬
+    /// 전투 1행동 코루틴
+    /// skillIndex < 0 이면 일반공격
+    /// HealType, DefenseType 은 스탯 조정 및 로그 후 종료
     /// </summary>
     public IEnumerator Attack(Pokemon other, int skillIndex)
     {
-        // @ 스킬 모델 로딩
+        // 회복 및 방어 스킬 판정
+        bool isHeal = false;
+        bool isDefense = false;
         SkillTpye model = null;
-        if (skillTypeBehaviours != null)
+
+        if (skillIndex >= 0)
         {
-            if (skillIndex >= 0)
+            if (skillIndex < skillTypeBehaviours.Length)
             {
-                if (skillIndex < skillTypeBehaviours.Length)
-                {
-                    model = skillTypeBehaviours[skillIndex];
-                }
+                model = skillTypeBehaviours[skillIndex];
             }
         }
 
-        // @ 로그용 이름
+        if (model != null)
+        {
+            if (model is HealType) { isHeal = true; }
+            else
+            {
+                if (model is DefenseType) { isDefense = true; }
+            }
+        }
+
+        if (isDefense)
+        {
+            int maxDef = def * 2;
+            if (maxDef < 10) { maxDef = 10; }
+            int add = Random.Range(10, maxDef + 1);
+
+            // 버프는 배틀매니저를 통해 적용 및 만료 관리
+            if (PokemonBattleManager.instance != null)
+            {
+                PokemonBattleManager.instance.ApplyDefenseBuff(this, add);
+            }
+
+            if (PokemonBattleManager.instance != null)
+            {
+                if (PokemonBattleManager.instance.textLog != null)
+                {
+                    PokemonBattleManager.instance.textLog.text = name + "의 방어가 " + add.ToString() + " 상승하였다.";
+                }
+            }
+            yield return new WaitForSeconds(0.5f);
+            yield break;
+        }
+
+        if (isHeal)
+        {
+            int maxHeal = Hp * 2;
+            if (maxHeal < 10) { maxHeal = 10; }
+            int heal = Random.Range(10, maxHeal + 1);
+            Hp = Hp + heal;
+
+            if (PokemonBattleManager.instance != null)
+            {
+                if (PokemonBattleManager.instance.textLog != null)
+                {
+                    PokemonBattleManager.instance.textLog.text = name + "의 체력이 " + heal.ToString() + " 회복되었다.";
+                }
+            }
+            yield return new WaitForSeconds(0.5f);
+            yield break;
+        }
+
+        // @ 공격 라벨 표시
         if (PokemonBattleManager.instance != null)
         {
             if (PokemonBattleManager.instance.textLog != null)
             {
-                string dispName = (skillIndex < 0) ? "공격" : "스킬";
+                string dispName = "공격";
                 if (skillNames != null)
                 {
                     if (skillIndex >= 0)
@@ -165,10 +204,12 @@ public class Pokemon
             }
         }
 
-        // @ 상성 배율
+        // 일반 공격 데미지 기본 공식
         float typeMul = battleType[(int)type, (int)other.type];
+        float raw = (atk - (other.def * 0.5f));
+        raw = raw < 1f ? 1f : raw;
+        float dmg = raw * typeMul;
 
-        // @ 효과 로그
         if (typeMul > 1.5f)
         {
             if (PokemonBattleManager.instance != null)
@@ -193,61 +234,23 @@ public class Pokemon
             }
         }
 
-        // @ 데미지 계산
-        int finalDamage = 0;
-        bool isNormal = (skillIndex < 0);
+        int adjustedDamage = (int)((dmg <= 0f) ? 1f : dmg);
 
-        if (isNormal)
+        if (skillIndex >= 0)
         {
-            // 1) 일반공격: (atk - def) * 배율
-            float baseRaw = (float)atk - (float)other.def;
-            baseRaw = (baseRaw < 1f) ? 1f : baseRaw;
-            float dmgF = baseRaw * typeMul;
-            dmgF = (dmgF <= 0f) ? 1f : dmgF;
-            finalDamage = (int)dmgF;
-        }
-        else
-        {
-            // 2,3) 스킬은 모델에서 처리
-            if (model != null)
+            if (skillIndex < skillTypeBehaviours.Length)
             {
-                finalDamage = model.ComputeDamageOverride(this, other, 0);
-            }
-            else
-            {
-                // @ 모델이 없으면 일반공격 공식으로 폴백
-                float baseRaw = (float)atk - (float)other.def;
-                baseRaw = (baseRaw < 1f) ? 1f : baseRaw;
-                float dmgF = baseRaw * typeMul;
-                dmgF = (dmgF <= 0f) ? 1f : dmgF;
-                finalDamage = (int)dmgF;
-            }
-        }
-
-        // @ 피해 적용
-        other.Hp = other.Hp - finalDamage;
-        other.Hp = (other.Hp <= 0) ? 0 : other.Hp;
-
-        // @ 4) 일반공격 반격: 20% 확률로 입힌 피해의 10% 즉시 반사
-        if (isNormal)
-        {
-            float r = Random.value;
-            if (r <= 0.2f)
-            {
-                int counterDmg = (int)((float)finalDamage * 0.1f);
-                counterDmg = (counterDmg < 1) ? 1 : counterDmg;
-                Hp = Hp - counterDmg;
-                Hp = (Hp <= 0) ? 0 : Hp;
-
-                if (PokemonBattleManager.instance != null)
+                SkillTpye m = skillTypeBehaviours[skillIndex];
+                if (m != null)
                 {
-                    if (PokemonBattleManager.instance.textLog != null)
-                    {
-                        PokemonBattleManager.instance.textLog.text = "반격 발생 @ " + name + " 이 " + counterDmg.ToString() + " 피해를 받았다";
-                    }
+                    adjustedDamage = m.ComputeDamageOverride(this, other, adjustedDamage);
                 }
             }
         }
+        // 데미지 누적하여 현재체력으로 변경
+        other.Hp = other.Hp - adjustedDamage;
+        // -Hp 표기 방지용
+        other.Hp = (other.Hp <= 0) ? 0 : other.Hp;
 
         yield return new WaitForSeconds(1f);
     }
