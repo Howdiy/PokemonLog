@@ -35,9 +35,21 @@ public class Pokemon
         hpSk
     }
 
+    /// <summary> 포켓몬 타입 </summary>
+    public Tpye type;
+
+    /// <summary> 포켓몬 도감 인덱스 </summary>
+    public PokemonIndex index;
+
+    /// <summary> 정보 표시를 위한 뷰 참조 </summary>
+    public PokemonInfo info;
+
+    /// <summary> 포켓몬 이름 </summary>
+    public string name = "";
+
     // @   Ʈ Ű
-    public string spriteKeyAttack = "";       // @   
-    public string spriteKeySkill = "";        // @ ų ⿡ 
+    public string spriteKeyAttack = "";       // @  
+    public string spriteKeySkill = "";        // @ ų ⿡
     public int atk;
     public int def;
     public int speed;
@@ -52,14 +64,13 @@ public class Pokemon
     public string spriteKeyChoice = "";       // @ 선택 화면용
     public string spriteKeyBattleIdle = "";   // @ 배틀 대기 포즈
 
-    // @ 기존 프로젝트에 있던 필드명 보존(지침 3)
-    public string spriteKeyAttack = "";       // @ 공격 포즈(과거 명칭)
-    public string spriteKeySkill = "";        // @ 스킬 포즈(과거 명칭)
-
     // @ 새로 참조되는 필드 추가(에러 CS1061 해결용)
     public string spriteKeyAtk = "";          // @ 공격 포즈(신규 명칭)
     public string spriteKeyDef = "";          // @ 방어/피격 포즈(신규 명칭)
     public string spriteKeyHp = "";          // @ HP 관련 표시용 키(신규 명칭)
+
+    /// <summary> HP 백킹 필드 </summary>
+    private int hp;
 
     /// <summary> 스킬 이름 4슬롯 </summary>
     public string[] skillNames = new string[4];
