@@ -1,35 +1,31 @@
 using UnityEngine;
 
 /// <summary>
-/// ÀüÅõ Áß º¸Á¤/¿¬Ãâ È®Àå ¸Ş¼­µå ¸ğÀ½
-/// </summary>
-public static class BattleFxAndBuffExtensions
-{
-    /// <summary>
-    /// ¹æ¾î Áõ°¡ ¹öÇÁ Àû¿ë @ Áï½Ã def °¡»ê + ·Î±× Ãâ·Â
-    /// 'durationTurns'´Â ÀÌÈÄ ±ÔÄ¢ È®Á¤½Ã ³»ºÎ ½ºÅÃ/»óÅÂ·Î È®Àå °¡´É
+        bm.ApplyDefenseBuffRuntime(target, amount, durationTurns);
+            { PokemonBattleManager.instance.textLog.text = target.name + " defense increased by " + amount + "."; }
+    /// 'durationTurns'ëŠ” ì´í›„ ê·œì¹™ í™•ì •ì‹œ ë‚´ë¶€ ìŠ¤íƒ/ìƒíƒœë¡œ í™•ì¥ ê°€ëŠ¥
     /// </summary>
     public static void ApplyDefenseBuff(this PokemonBattleManager bm, Pokemon target, int amount, int durationTurns)
     {
         if (bm == null) { return; }
         if (target == null) { return; }
 
-        // @ Áï½Ã ¼öÄ¡ ¹İ¿µ
+        // @ ì¦‰ì‹œ ìˆ˜ì¹˜ ë°˜ì˜
         target.def = target.def + amount;
 
-        // @ ·Î±× Ãâ·Â
+        // @ ë¡œê·¸ ì¶œë ¥
         if (PokemonBattleManager.instance != null)
         {
             if (PokemonBattleManager.instance.textLog != null)
-            { PokemonBattleManager.instance.textLog.text = target.name + "ÀÇ ¹æ¾î°¡ " + amount + " »ó½ÂÇß´Ù."; }
+            { PokemonBattleManager.instance.textLog.text = target.name + "ì˜ ë°©ì–´ê°€ " + amount + " ìƒìŠ¹í–ˆë‹¤."; }
         }
 
-        // durationTurns ÀúÀå/°¨¼Ò ·ÎÁ÷Àº ÀÌÈÄ ±ÔÄ¢ È®Á¤½Ã bm ³»ºÎ »óÅÂ·Î È®Àå
+        // durationTurns ì €ì¥/ê°ì†Œ ë¡œì§ì€ ì´í›„ ê·œì¹™ í™•ì •ì‹œ bm ë‚´ë¶€ ìƒíƒœë¡œ í™•ì¥
     }
 
     /// <summary>
-    /// ÇÏÀ§ ÄÚµå È£È¯¿ë(Áö¼Ó ÅÏ ±âº» 3)
-    /// µğÆúÆ® ¿À¹ö·Îµå
+    /// í•˜ìœ„ ì½”ë“œ í˜¸í™˜ìš©(ì§€ì† í„´ ê¸°ë³¸ 3)
+    /// ë””í´íŠ¸ ì˜¤ë²„ë¡œë“œ
     /// </summary>
     public static void ApplyDefenseBuff(this PokemonBattleManager bm, Pokemon target, int amount)
     {
