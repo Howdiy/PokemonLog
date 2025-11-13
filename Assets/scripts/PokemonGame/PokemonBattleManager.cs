@@ -608,11 +608,41 @@ public class PokemonBattleManager : MonoBehaviour
         }
     }
 
-    private void OnClickSkill1() { OnClickSkillIndex(0); }
-    private void OnClickSkill2() { OnClickSkillIndex(1); }
-    private void OnClickSkill3() { OnClickSkillIndex(2); }
-    private void OnClickSkill4() { OnClickSkillIndex(3); }
+    /// <summary>
+    ///     1번 스킬 버튼 클릭 처리
+    /// </summary>
+    private void OnClickSkill1()
+    {
+        OnClickSkillIndex(0);
+    }
 
+    /// <summary>
+    ///     2번 스킬 버튼 클릭 처리
+    /// </summary>
+    private void OnClickSkill2()
+    {
+        OnClickSkillIndex(1);
+    }
+
+    /// <summary>
+    ///     3번 스킬 버튼 클릭 처리
+    /// </summary>
+    private void OnClickSkill3()
+    {
+        OnClickSkillIndex(2);
+    }
+
+    /// <summary>
+    ///     4번 스킬 버튼 클릭 처리
+    /// </summary>
+    private void OnClickSkill4()
+    {
+        OnClickSkillIndex(3);
+    }
+
+    /// <summary>
+    ///     플레이어 스킬 선택 공통 처리
+    /// </summary>
     private void OnClickSkillIndex(int idx)
     {
         if (_isGameOver) { return; }
@@ -870,6 +900,8 @@ public class PokemonBattleManager : MonoBehaviour
         }
 
         yield return StartCoroutine(EnemyCur.Attack(PlayerCur, skillIndex));
+
+        TryApplyCounterDamage(PlayerCur, EnemyCur);
 
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
     }

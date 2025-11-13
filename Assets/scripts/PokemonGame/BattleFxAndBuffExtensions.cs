@@ -5,6 +5,8 @@ using UnityEngine;
 /// </summary>
 public static class BattleFxAndBuffExtensions
 {
+    private const int DefaultDefenseBuffDurationTurns = 3;
+
     /// <summary>
     ///     방어 상승 버프 적용 (지속 턴 지정)
     /// </summary>
@@ -15,11 +17,13 @@ public static class BattleFxAndBuffExtensions
 
         bm.ApplyDefenseBuffRuntime(target, amount, durationTurns);
 
-        if (PokemonBattleManager.instance != null)
+        PokemonBattleManager manager = PokemonBattleManager.instance ?? bm;
+
+        if (manager != null)
         {
-            if (PokemonBattleManager.instance.textLog != null)
+            if (manager.textLog != null)
             {
-                PokemonBattleManager.instance.textLog.text = target.name + "의 방어가 " + amount + " 상승했다.";
+                manager.textLog.text = target.name + "의 방어가 " + amount + " 상승했다.";
             }
         }
 
@@ -31,6 +35,6 @@ public static class BattleFxAndBuffExtensions
     /// </summary>
     public static void ApplyDefenseBuff(this PokemonBattleManager bm, Pokemon target, int amount)
     {
-        bm.ApplyDefenseBuff(target, amount, 3);
+        bm.ApplyDefenseBuff(target, amount, DefaultDefenseBuffDurationTurns);
     }
 }
