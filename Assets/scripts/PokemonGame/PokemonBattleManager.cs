@@ -576,20 +576,60 @@ public class PokemonBattleManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>
+    private void OnClickAttack()
+    {
         if (_isGameOver) { return; }
+        if (PlayerCur == null) { return; }
+        if (EnemyCur == null) { return; }
+
         LockInputs();
+        StartCoroutine(CoPlayerAttackThenEnemy());
+    }
+
+    private void OnClickBag()
+    {
+        if (_isGameOver) { return; }
+        if (shopPanel != null) { shopPanel.SetActive(true); }
+    }
+
+    private void OnClickBattleSkillOpen()
+    {
         if (_isGameOver) { return; }
         LogNow("Select a skill");
+    }
+
+    private void OnClickOpenSwitchPanel()
+    {
         if (_isGameOver) { return; }
+        if (switchPanel != null)
+        {
+            RefreshSwitchButtonLabels();
+            switchPanel.SetActive(true);
+        }
+    }
+
+    private void OnClickSkill1() { OnClickSkillIndex(0); }
+    private void OnClickSkill2() { OnClickSkillIndex(1); }
+    private void OnClickSkill3() { OnClickSkillIndex(2); }
+    private void OnClickSkill4() { OnClickSkillIndex(3); }
+
+    private void OnClickSkillIndex(int idx)
+    {
         if (_isGameOver) { return; }
+        if (PlayerCur == null) { return; }
+        if (EnemyCur == null) { return; }
+
         if (IsSkillOnCooldown(PlayerCur, idx))
         {
             RefreshSkillButtonStates();
             LogNow("That skill is on cooldown.");
             return;
         }
+
         LockInputs();
+        StartCoroutine(CoPlayerUseSkillThenEnemy(idx));
+    }
+
     private IEnumerator CoPlayerSwitchThenEnemy(int toIndex)
     {
         bool switched = ApplyPlayerSwitch(toIndex);
@@ -616,29 +656,69 @@ public class PokemonBattleManager : MonoBehaviour
         }
     }
 
+    private IEnumerator CoPlayerAttackThenEnemy()
     {
+        if (PlayerCur == null) { yield break; }
+        if (EnemyCur == null) { yield break; }
+
         LogNow("Player normal attack");
-        if (!_isGameOver && !IsEnemyAllDown())
+
+        if (myInfo != null) { yield return StartCoroutine(myInfo.NormalAttackSequence(otherInfo)); }
+
+        yield return StartCoroutine(PlayerCur.Attack(EnemyCur, -1));
+
+        TryApplyCounterDamage(EnemyCur, PlayerCur);
+
+        yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
+
+        if (_isGameOver) { yield break; }
+
+        if (!IsEnemyAllDown())
         {
             yield return StartCoroutine(CoEnemyActionAuto());
         }
+
         if (!_isGameOver)
         {
             BeginPlayerTurn(true);
         }
+    }
+
+    private IEnumerator CoPlayerUseSkillThenEnemy(int skillIndex)
     {
+        if (PlayerCur == null) { yield break; }
+        if (EnemyCur == null) { yield break; }
+
         LogNow("Player used a skill");
+
+        bool isMelee = false;
+        bool isRanged = false;
+        bool isHeal = false;
+        bool isDefense = false;
         bool hasSkill = false;
 
-                            hasSkill = true;
-                            else if (model is RangedAttackType) { isRanged = true; }
-                            else if (model is HealType) { isHeal = true; }
-                            else if (model is DefenseType) { isDefense = true; }
+        if (PlayerCur.skillTypeBehaviours != null && skillIndex >= 0 && skillIndex < PlayerCur.skillTypeBehaviours.Length)
+        {
+            SkillTpye model = PlayerCur.skillTypeBehaviours[skillIndex];
+            if (model != null)
+            {
+                hasSkill = true;
+                if (model is MeleeAttackType) { isMelee = true; }
+                else if (model is RangedAttackType) { isRanged = true; }
+                else if (model is HealType) { isHeal = true; }
+                else if (model is DefenseType) { isDefense = true; }
+            }
+        }
+
         if (hasSkill)
         {
             RegisterSkillUse(PlayerCur, skillIndex);
         }
 
+        if (isMelee)
+        {
+            if (myInfo != null) { yield return StartCoroutine(myInfo.MeleeSkillSequence(otherInfo, skillIndex)); }
+        }
         else if (isRanged)
         {
             if (myInfo != null) { yield return StartCoroutine(myInfo.RangedSkillSequence(otherInfo, skillIndex)); }
@@ -651,17 +731,36 @@ public class PokemonBattleManager : MonoBehaviour
         {
             if (myInfo != null) { yield return StartCoroutine(myInfo.DefenseSkillSequence(skillIndex)); }
         }
+        else
+        {
             if (myInfo != null) { yield return new WaitForSeconds(0.25f); }
+        }
 
-        if (!_isGameOver && !IsEnemyAllDown())
+        yield return StartCoroutine(PlayerCur.Attack(EnemyCur, skillIndex));
+
+        TryApplyCounterDamage(EnemyCur, PlayerCur);
+
+        yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
+
+        if (_isGameOver) { yield break; }
+
+        if (!IsEnemyAllDown())
         {
             yield return StartCoroutine(CoEnemyActionAuto());
         }
+
         if (!_isGameOver)
         {
             BeginPlayerTurn(true);
         }
+    }
+
+    private IEnumerator CoEnemyActionAuto()
+    {
         if (_isGameOver) { yield break; }
+        if (EnemyCur == null) { yield break; }
+        if (PlayerCur == null) { yield break; }
+
         AdvanceCooldownsForTeam(false);
         AdvanceDefenseBuffsForTeam(false);
 
@@ -689,9 +788,18 @@ public class PokemonBattleManager : MonoBehaviour
 
     private IEnumerator CoEnemyNormalAttack()
     {
+        if (EnemyCur == null) { yield break; }
+        if (PlayerCur == null) { yield break; }
+
         LogNow("Enemy attack!");
 
+        if (otherInfo != null) { yield return StartCoroutine(otherInfo.NormalAttackSequence(myInfo)); }
 
+        yield return StartCoroutine(EnemyCur.Attack(PlayerCur, -1));
+
+        TryApplyCounterDamage(PlayerCur, EnemyCur);
+
+        yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
     }
 
     private IEnumerator CoEnemyUseSkill(int skillIndex)
