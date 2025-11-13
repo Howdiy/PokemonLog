@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 /// <summary>
 /// @ 포켓몬 기본 모델 @ MonoBehaviour 미상속
@@ -167,10 +166,7 @@ public class Pokemon
 
             if (PokemonBattleManager.instance != null)
             {
-                if (PokemonBattleManager.instance.textLog != null)
-                {
-                    PokemonBattleManager.instance.textLog.text = name + "의 체력이 " + heal.ToString() + " 회복되었다.";
-                }
+                PokemonBattleManager.instance.WriteBattleLog(name + "의 체력이 " + heal.ToString() + " 회복되었다.");
             }
             yield return new WaitForSeconds(0.5f);
             yield break;
@@ -179,21 +175,18 @@ public class Pokemon
         // @ 공격 라벨 표시
         if (PokemonBattleManager.instance != null)
         {
-            if (PokemonBattleManager.instance.textLog != null)
+            string dispName = "공격";
+            if (skillNames != null)
             {
-                string dispName = "공격";
-                if (skillNames != null)
+                if (skillIndex >= 0)
                 {
-                    if (skillIndex >= 0)
+                    if (skillIndex < 4)
                     {
-                        if (skillIndex < 4)
-                        {
-                            dispName = skillNames[skillIndex];
-                        }
+                        dispName = skillNames[skillIndex];
                     }
                 }
-                PokemonBattleManager.instance.textLog.text = name + "의 " + dispName + " 공격";
             }
+            PokemonBattleManager.instance.WriteBattleLog(name + "의 " + dispName + " 공격");
         }
 
         // 일반 공격 데미지 기본 공식
@@ -202,24 +195,17 @@ public class Pokemon
         raw = raw < 1f ? 1f : raw;
         float dmg = raw * typeMul;
 
-        if (typeMul > 1.5f)
+        if (PokemonBattleManager.instance != null)
         {
-            if (PokemonBattleManager.instance != null)
+            if (typeMul > 1.5f)
             {
-                if (PokemonBattleManager.instance.textLog != null)
-                {
-                    PokemonBattleManager.instance.textLog.text = "효과는 굉장했다!";
-                }
+                PokemonBattleManager.instance.WriteBattleLog("효과는 굉장했다!");
+            }
+            else if (typeMul < 0.75f)
+            {
+                PokemonBattleManager.instance.WriteBattleLog("효과는 미미했다");
             }
         }
-        else
-        {
-            if (typeMul < 0.75f)
-            {
-                if (PokemonBattleManager.instance != null)
-                {
-                    if (PokemonBattleManager.instance.textLog != null)
-                    {
         if (skillIndex < 0)
         {
             if (PokemonBattleManager.instance != null)
@@ -228,12 +214,6 @@ public class Pokemon
                 if (counter)
                 {
                     yield return new WaitForSeconds(0.35f);
-                }
-            }
-        }
-
-                        PokemonBattleManager.instance.textLog.text = "효과는 미미했다";
-                    }
                 }
             }
         }

@@ -15,11 +15,8 @@ public static class BattleFxAndBuffExtensions
         // PokemonBattleManager 내부 런타임 상태에 버프를 등록하고 수치를 반영한다.
         bm.ApplyDefenseBuffRuntime(target, amount, durationTurns);
 
-        // 텍스트 로그를 중앙에서 출력하여 호출부마다 중복되지 않도록 한다.
-        if (bm.textLog != null)
-        {
-            bm.textLog.text = target.name + "의 방어가 " + amount.ToString() + " 상승하였다.";
-        }
+        // 텍스트 로그는 배틀 매니저의 공용 메서드를 통해 출력한다.
+        bm.WriteBattleLog(target.name + "의 방어가 " + amount.ToString() + " 상승하였다.");
     }
 
     /// <summary>

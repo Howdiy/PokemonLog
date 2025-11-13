@@ -1398,6 +1398,16 @@ public class PokemonBattleManager : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// 전투 로그 텍스트를 즉시 갱신한다.
+    /// 외부 스크립트가 UI 구현 세부사항을 몰라도 메시지를 남길 수 있도록 한다.
+    /// </summary>
+    public void WriteBattleLog(string message)
+    {
+        if (string.IsNullOrEmpty(message)) { return; }
+        LogNow(message);
+    }
+
     // 텍스트 로그 탐색
     private void LogNow(string s)
     {
