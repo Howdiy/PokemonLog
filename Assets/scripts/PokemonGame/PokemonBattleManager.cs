@@ -7,26 +7,26 @@ using UnityEngine.UI;
 
 /// <summary>
 /// @ PokemonBattleManager
-/// @ ¾À ÀÎµ¦½º: Start=0, Battle=1, Choices=2
-/// @ PlayerTeam/EnemyTeam´Â PokemonGamemanagerÀÇ Á¤Àû ¸®½ºÆ® »ç¿ë
-/// @ Ä¿¸Çµå 4¹öÆ° SetActive()·Î º¸ÀÓ/¼û±è
-/// @ ½ºÅ³ 1~4 ¹öÆ° ÅØ½ºÆ®¸¦ ÇöÀç ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸óÀÇ skillNames·Î ¹İ¿µ
-/// @ ±³Ã¼ UI 2½½·Ô(ÇÃ·¹ÀÌ¾î Àü¿ë), ÀûÀº UI ¾øÀÌ ÄÚµå·Î¸¸ Çàµ¿
-/// @ Setting ÇÁ¸®ÆÕ: ¾À ÀÎ½ºÅÏ½º ÂüÁ¶ ¶Ç´Â ¿¡¼Â¸¸ ¿¬°áÇØµµ ÀÚµ¿ Instantiate
+/// @ ì”¬ ì¸ë±ìŠ¤: Start=0, Battle=1, Choices=2
+/// @ PlayerTeam/EnemyTeamëŠ” PokemonGamemanagerì˜ ì •ì  ë¦¬ìŠ¤íŠ¸ ì‚¬ìš©
+/// @ ì»¤ë§¨ë“œ 4ë²„íŠ¼ SetActive()ë¡œ ë³´ì„/ìˆ¨ê¹€
+/// @ ìŠ¤í‚¬ 1~4 ë²„íŠ¼ í…ìŠ¤íŠ¸ë¥¼ í˜„ì¬ í”Œë ˆì´ì–´ í¬ì¼“ëª¬ì˜ skillNamesë¡œ ë°˜ì˜
+/// @ êµì²´ UI 2ìŠ¬ë¡¯(í”Œë ˆì´ì–´ ì „ìš©), ì ì€ UI ì—†ì´ ì½”ë“œë¡œë§Œ í–‰ë™
+/// @ Setting í”„ë¦¬íŒ¹: ì”¬ ì¸ìŠ¤í„´ìŠ¤ ì°¸ì¡° ë˜ëŠ” ì—ì…‹ë§Œ ì—°ê²°í•´ë„ ìë™ Instantiate
 /// </summary>
 public class PokemonBattleManager : MonoBehaviour
 {
-    // ½Ì±ÛÅæ
+    // ì‹±ê¸€í†¤
     public static PokemonBattleManager instance;
 
-    // 'Setting'PreFab °ü·Ã
+    // 'Setting'PreFab ê´€ë ¨
     [Header("Setting Reference")]
     [SerializeField] private Setting settingsRef;
     [SerializeField] private GameObject settingsPrefab;
     [SerializeField] private Transform uiRoot;
     private GameObject _settingsInst;
 
-    // ¹èÆ²ÁßÀÎ Æ÷ÄÏ¸ó Á¤º¸ Ç¥½Ã
+    // ë°°í‹€ì¤‘ì¸ í¬ì¼“ëª¬ ì •ë³´ í‘œì‹œ
     [Header("Infos")]
     [SerializeField] private PokemonInfo myInfo;
     [SerializeField] private PokemonInfo otherInfo;
@@ -35,21 +35,81 @@ public class PokemonBattleManager : MonoBehaviour
     [SerializeField] public TextMeshProUGUI textLog;
     [SerializeField] private TextMeshProUGUI roundText;
 
-    // ÇÃ·¹ÀÌ¾î Çàµ¿ ¹öÆ°È­
+    [Header("Game Over")]
+    [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TextMeshProUGUI gameOverText;
+    [SerializeField] private Button gameOverExitBt;
+
+    public const string ROUND_SNAPSHOT_PREF_KEY = "POKEMON_ROUND_SNAPSHOT_V1";
+
+    private class DefenseBuffState
+    {
+        public int amount;
+        public int remainingTurns;
+    }
+
+    [System.Serializable]
+    public class SkillCooldownSnapshot
+    {
+        public bool isPlayer;
+        public int teamIndex;
+        public int[] cooldowns = new int[4];
+    }
+
+    [System.Serializable]
+    public class DefenseBuffSnapshot
+    {
+        public bool isPlayer;
+        public int teamIndex;
+        public int amount;
+        public int remainingTurns;
+    }
+
+    [System.Serializable]
+    public class RoundSnapshot
+    {
+        public int round;
+        public int playerIndex;
+        public int enemyIndex;
+        public int[] playerHp;
+        public int[] enemyHp;
+        public SkillCooldownSnapshot[] cooldowns;
+        public DefenseBuffSnapshot[] defenseBuffs;
+    }
+
+    private readonly Dictionary<Pokemon, int[]> _skillCooldowns = new Dictionary<Pokemon, int[]>();
+    private readonly Dictionary<Pokemon, DefenseBuffState> _defenseBuffStates = new Dictionary<Pokemon, DefenseBuffState>();
+    private bool _isGameOver = false;
+
+    private enum EnemyActionType
+    {
+        NormalAttack,
+        Skill,
+        Switch
+    }
+
+    private struct EnemyDecision
+    {
+        public EnemyActionType actionType;
+        public int skillIndex;
+        public int switchToIndex;
+    }
+
+    // í”Œë ˆì´ì–´ í–‰ë™ ë²„íŠ¼í™”
     [Header("Command Buttons")]
     [SerializeField] private Button attackBt;
     [SerializeField] private Button bagBt;
     [SerializeField] private Button battleSkillBt;
     [SerializeField] private Button pokemonListBt;
 
-    // ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸ó ½ºÅ³ ¹öÆ°
+    // í”Œë ˆì´ì–´ í¬ì¼“ëª¬ ìŠ¤í‚¬ ë²„íŠ¼
     [Header("Skill 1-4 Buttons")]
     [SerializeField] private Button skill1Bt;
     [SerializeField] private Button skill2Bt;
     [SerializeField] private Button skill3Bt;
     [SerializeField] private Button skill4Bt;
 
-    // »óÁ¡ÆĞ³Î ¹× ±³Ã¼ÆĞ³Î
+    // ìƒì íŒ¨ë„ ë° êµì²´íŒ¨ë„
     [Header("Shop Panel")]
     [SerializeField] private GameObject shopPanel;
 
@@ -60,7 +120,7 @@ public class PokemonBattleManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI switchBt0Text;
     [SerializeField] private TextMeshProUGUI switchBt1Text;
 
-    // ÀÎ°ÔÀÓ ÁøÇà »óÅÂ
+    // ì¸ê²Œì„ ì§„í–‰ ìƒíƒœ
     private int playerIndex = -1;
     private int enemyIndex = -1;
     private int round = 1;
@@ -116,22 +176,26 @@ public class PokemonBattleManager : MonoBehaviour
         WireSwitchButtons();
 
         HideAllSubPanelsAtStart();
-        SetCommandButtonsActive(true);
+        if (gameOverPanel != null) { gameOverPanel.SetActive(false); }
+        WireGameOverButton();
 
         if (myInfo != null) { myInfo.isPlayerSide = true; }
         if (otherInfo != null) { otherInfo.isPlayerSide = false; }
+
+        LoadRoundSnapshotIfAvailable();
         RefreshInfos();
         RefreshRoundLabel();
         RefreshSkillButtonLabelsFromPlayer();
         RefreshSwitchButtonLabels();
 
-        LogNow("Round " + round.ToString() + " ½ÃÀÛ");
+        BeginPlayerTurn(false);
+        LogNow("Round " + round.ToString() + " start");
     }
 
     /// <summary>
-    /// ¼³Á¤ÇÁ¸®ÆÕ °ü·Ã
+    /// ì„¤ì •í”„ë¦¬íŒ¹ ê´€ë ¨
     /// </summary>
-    // Setting ÀÎ½ºÅÏ½º º¸Àå
+    // Setting ì¸ìŠ¤í„´ìŠ¤ ë³´ì¥
     private void EnsureSettingsInstanceOrBind()
     {
         Setting exists = GameObject.FindObjectOfType<Setting>();
@@ -165,9 +229,9 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹öÆ°º° ¹ÙÀÎµù
+    /// ë²„íŠ¼ë³„ ë°”ì¸ë”©
     /// </summary>
-    // ÇÃ·¹ÀÌ¾î Çàµ¿ ¹öÆ°
+    // í”Œë ˆì´ì–´ í–‰ë™ ë²„íŠ¼
     private void WireCommandButtons()
     {
         if (attackBt != null) { attackBt.onClick.RemoveAllListeners(); attackBt.onClick.AddListener(OnClickAttack); }
@@ -175,7 +239,7 @@ public class PokemonBattleManager : MonoBehaviour
         if (battleSkillBt != null) { battleSkillBt.onClick.RemoveAllListeners(); battleSkillBt.onClick.AddListener(OnClickBattleSkillOpen); }
         if (pokemonListBt != null) { pokemonListBt.onClick.RemoveAllListeners(); pokemonListBt.onClick.AddListener(OnClickOpenSwitchPanel); }
     }
-    //ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸ó ½ºÅ³ ¹öÆ°
+    //í”Œë ˆì´ì–´ í¬ì¼“ëª¬ ìŠ¤í‚¬ ë²„íŠ¼
     private void WireSkillButtons()
     {
         if (skill1Bt != null) { skill1Bt.onClick.RemoveAllListeners(); skill1Bt.onClick.AddListener(OnClickSkill1); }
@@ -183,17 +247,182 @@ public class PokemonBattleManager : MonoBehaviour
         if (skill3Bt != null) { skill3Bt.onClick.RemoveAllListeners(); skill3Bt.onClick.AddListener(OnClickSkill3); }
         if (skill4Bt != null) { skill4Bt.onClick.RemoveAllListeners(); skill4Bt.onClick.AddListener(OnClickSkill4); }
     }
-    // ±³Ã¼ÇÒ Æ÷ÄÏ¸ó ¼±ÅÃ ¹öÆ°
-    private void WireSwitchButtons()
+        if (_isGameOver) { active = false; }
+
+        if (attackBt != null)
+        {
+            GameObject g = attackBt.gameObject;
+            if (g != null) { g.SetActive(active); }
+            attackBt.interactable = active;
+        }
+        if (bagBt != null)
+        {
+            GameObject g = bagBt.gameObject;
+            if (g != null) { g.SetActive(active); }
+            bagBt.interactable = active;
+        }
+        if (battleSkillBt != null)
+        {
+            GameObject g = battleSkillBt.gameObject;
+            if (g != null) { g.SetActive(active); }
+            battleSkillBt.interactable = active;
+        }
+        if (pokemonListBt != null)
+        {
+            GameObject g = pokemonListBt.gameObject;
+            if (g != null) { g.SetActive(active); }
+            pokemonListBt.interactable = active;
+        }
+    }
+
+    private void SetSkillButtonsInteractable(bool interactable)
     {
-        if (switchBt0 != null) { switchBt0.onClick.RemoveAllListeners(); switchBt0.onClick.AddListener(OnClickSwitch0); }
+        if (_isGameOver) { interactable = false; }
+
+        if (skill1Bt != null) { skill1Bt.interactable = interactable && skill1Bt.gameObject.activeInHierarchy; }
+        if (skill2Bt != null) { skill2Bt.interactable = interactable && skill2Bt.gameObject.activeInHierarchy; }
+        if (skill3Bt != null) { skill3Bt.interactable = interactable && skill3Bt.gameObject.activeInHierarchy; }
+        if (skill4Bt != null) { skill4Bt.interactable = interactable && skill4Bt.gameObject.activeInHierarchy; }
+    }
+
+    private void RefreshSkillButtonStates()
+    {
+        Pokemon p = PlayerCur;
+        bool baseInteractable = (_isGameOver == false) && (p != null);
+
+        if (skill1Bt != null) { skill1Bt.interactable = baseInteractable && !IsSkillOnCooldown(p, 0); }
+        if (skill2Bt != null) { skill2Bt.interactable = baseInteractable && !IsSkillOnCooldown(p, 1); }
+        if (skill3Bt != null) { skill3Bt.interactable = baseInteractable && !IsSkillOnCooldown(p, 2); }
+        if (skill4Bt != null) { skill4Bt.interactable = baseInteractable && !IsSkillOnCooldown(p, 3); }
+    }
+
+    private void WireGameOverButton()
+    {
+        if (gameOverExitBt == null) { return; }
+        gameOverExitBt.onClick.RemoveAllListeners();
+        gameOverExitBt.onClick.AddListener(() =>
+        {
+            ClearSavedSnapshot();
+            SceneManager.LoadScene(PokemonGamemanager.SCENE_INDEX_PokemonStart);
+        });
+    }
+
+    private void LockInputs()
+    {
+        SetCommandButtonsActive(false);
+        SetSkillButtonsInteractable(false);
+        if (shopPanel != null) { shopPanel.SetActive(false); }
+        if (switchPanel != null) { switchPanel.SetActive(false); }
+    }
+
+    private int[] GetOrCreateCooldownArray(Pokemon pokemon)
+    {
+        if (pokemon == null) { return null; }
+        if (_skillCooldowns.TryGetValue(pokemon, out int[] arr)) { return arr; }
+
+        arr = new int[4];
+        _skillCooldowns[pokemon] = arr;
+        return arr;
+    }
+
+    private bool IsSkillOnCooldown(Pokemon pokemon, int skillIndex)
+    {
+        if (pokemon == null) { return false; }
+        if (skillIndex < 0) { return false; }
+        int[] arr = GetOrCreateCooldownArray(pokemon);
+        if (arr == null) { return false; }
+        if (skillIndex >= arr.Length) { return false; }
+        return arr[skillIndex] > 0;
+    }
+
+    private void RegisterSkillUse(Pokemon pokemon, int skillIndex)
+    {
+        if (pokemon == null) { return; }
+        if (skillIndex < 0) { return; }
+        int[] arr = GetOrCreateCooldownArray(pokemon);
+        if (arr == null) { return; }
+        if (skillIndex >= arr.Length) { return; }
+
+        arr[skillIndex] = 2;
+
+        if (pokemon == PlayerCur)
+        {
+            RefreshSkillButtonStates();
+        }
+    }
+
+    private void AdvanceCooldownsForTeam(bool isPlayerTeam)
+    {
+        List<Pokemon> team = isPlayerTeam ? PokemonGamemanager.PlayerTeam : PokemonGamemanager.EnemyTeam;
+        if (team == null) { return; }
+
+        foreach (Pokemon member in team)
+        {
+            if (member == null) { continue; }
+            if (_skillCooldowns.TryGetValue(member, out int[] arr))
+            {
+                for (int i = 0; i < arr.Length; i = i + 1)
+                {
+                    if (arr[i] > 0) { arr[i] = arr[i] - 1; }
+                }
+            }
+        }
+    }
+
+    private void AdvanceDefenseBuffsForTeam(bool isPlayerTeam)
+    {
+        List<Pokemon> team = isPlayerTeam ? PokemonGamemanager.PlayerTeam : PokemonGamemanager.EnemyTeam;
+        if (team == null) { return; }
+
+        foreach (Pokemon member in team)
+        {
+            if (member == null) { continue; }
+            if (_defenseBuffStates.TryGetValue(member, out DefenseBuffState state))
+            {
+                state.remainingTurns = Mathf.Max(0, state.remainingTurns - 1);
+                if (state.remainingTurns <= 0)
+                {
+                    RemoveDefenseBuff(member);
+                }
+            }
+        }
+    }
+
+    private void BeginPlayerTurn(bool advanceCounters)
+    {
+        if (_isGameOver) { return; }
+
+        CheckAndHandleGameOver();
+        if (_isGameOver) { return; }
+
+        if (switchPanel != null) { switchPanel.SetActive(false); }
+        if (shopPanel != null) { shopPanel.SetActive(false); }
+
+        if (advanceCounters)
+        {
+            AdvanceCooldownsForTeam(true);
+            AdvanceDefenseBuffsForTeam(true);
+        }
+
+        RefreshInfos();
+        RefreshRoundLabel();
+        RefreshSkillButtonLabelsFromPlayer();
+        RefreshSwitchButtonLabels();
+
+        SetCommandButtonsActive(true);
+        SetSkillButtonsInteractable(true);
+        RefreshSkillButtonStates();
+
+        SaveRoundSnapshotToPrefs();
+
+        RefreshSkillButtonStates();
         if (switchBt1 != null) { switchBt1.onClick.RemoveAllListeners(); switchBt1.onClick.AddListener(OnClickSwitch1); }
     }
 
     /// <summary>
-    /// ¿ÀºêÁ§Æ® Ç¥½Ã Á¦¾î
+    /// ì˜¤ë¸Œì íŠ¸ í‘œì‹œ ì œì–´
     /// </summary>
-    // ½ÃÀÛ½Ã »óÁ¡ ¹× ±³Ã¼ ÆĞ³Î ºñÈ°¼ºÈ­
+    // ì‹œì‘ì‹œ ìƒì  ë° êµì²´ íŒ¨ë„ ë¹„í™œì„±í™”
     private void HideAllSubPanelsAtStart()
     {
         if (shopPanel != null) { shopPanel.SetActive(false); }
@@ -255,7 +484,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ±³Ã¼(2½½·Ô) °ü·Ã
+    /// êµì²´(2ìŠ¬ë¡¯) ê´€ë ¨
     /// </summary>
     private int _switchSlot0Index = -1;
     private int _switchSlot1Index = -1;
@@ -303,30 +532,40 @@ public class PokemonBattleManager : MonoBehaviour
 
         _switchSlot0Index = (cands.Count > 0) ? cands[0] : -1;
         _switchSlot1Index = (cands.Count > 1) ? cands[1] : -1;
+
+        bool hasSlot0 = _switchSlot0Index >= 0;
+        bool hasSlot1 = _switchSlot1Index >= 0;
+
+        if (switchBt0 != null) { switchBt0.interactable = hasSlot0; }
+        if (switchBt1 != null) { switchBt1.interactable = hasSlot1; }
     }
 
     private void OnClickSwitch0()
     {
+        if (_isGameOver) { return; }
         if (_switchSlot0Index < 0) { return; }
-        ApplyPlayerSwitch(_switchSlot0Index);
+        LockInputs();
+        StartCoroutine(CoPlayerSwitchThenEnemy(_switchSlot0Index));
     }
 
     private void OnClickSwitch1()
     {
+        if (_isGameOver) { return; }
         if (_switchSlot1Index < 0) { return; }
-        ApplyPlayerSwitch(_switchSlot1Index);
+        LockInputs();
+        StartCoroutine(CoPlayerSwitchThenEnemy(_switchSlot1Index));
     }
 
-    private void ApplyPlayerSwitch(int toIndex)
+    private bool ApplyPlayerSwitch(int toIndex)
     {
         List<Pokemon> team = PokemonGamemanager.PlayerTeam;
-        if (team == null) { return; }
-        if (toIndex < 0) { return; }
-        if (toIndex >= team.Count) { return; }
+        if (team == null) { return false; }
+        if (toIndex < 0) { return false; }
+        if (toIndex >= team.Count) { return false; }
 
         Pokemon cand = team[toIndex];
-        if (cand == null) { return; }
-        if (cand.Hp <= 0) { return; }
+        if (cand == null) { return false; }
+        if (cand.Hp <= 0) { return false; }
 
         playerIndex = toIndex;
 
@@ -334,83 +573,650 @@ public class PokemonBattleManager : MonoBehaviour
         RefreshSkillButtonLabelsFromPlayer();
         RefreshSwitchButtonLabels();
 
-        if (switchPanel != null) { switchPanel.SetActive(false); }
-
-        LogNow("Æ÷ÄÏ¸ó ±³Ã¼");
+        return true;
     }
 
     /// <summary>
-    /// ¹öÆ° OnClickÀÌº¥Æ® Ä¿¸Çµå
-    /// </summary>
-    private void OnClickAttack()
-    {
-        if (PlayerCur == null) { return; }
-        if (EnemyCur == null) { return; }
-        SetCommandButtonsActive(false);
-        StartCoroutine(CoPlayerTurn_NormalAttackThenEnemy());
-    }
-
-    private void OnClickBag()
-    {
-        if (shopPanel != null) { shopPanel.SetActive(true); }
-    }
-
-    private void OnClickBattleSkillOpen()
-    {
-        LogNow("½ºÅ³ ¼±ÅÃ");
-    }
-
-    private void OnClickOpenSwitchPanel()
-    {
-        if (switchPanel != null)
+        if (_isGameOver) { return; }
+        LockInputs();
+        if (_isGameOver) { return; }
+        LogNow("Select a skill");
+        if (_isGameOver) { return; }
+        if (_isGameOver) { return; }
+        if (IsSkillOnCooldown(PlayerCur, idx))
         {
-            RefreshSwitchButtonLabels();
-            switchPanel.SetActive(true);
+            RefreshSkillButtonStates();
+            LogNow("That skill is on cooldown.");
+            return;
+        }
+        LockInputs();
+    private IEnumerator CoPlayerSwitchThenEnemy(int toIndex)
+    {
+        bool switched = ApplyPlayerSwitch(toIndex);
+        if (!switched)
+        {
+            BeginPlayerTurn(false);
+            yield break;
+        }
+
+        if (switchPanel != null) { switchPanel.SetActive(false); }
+        string switchedName = (PlayerCur != null) ? PlayerCur.name : "a new Pokemon";
+        LogNow("Player switched to " + switchedName + "!");
+
+        yield return new WaitForSeconds(0.35f);
+
+        if (!_isGameOver && !IsEnemyAllDown())
+        {
+            yield return StartCoroutine(CoEnemyActionAuto());
+        }
+
+        if (!_isGameOver)
+        {
+            BeginPlayerTurn(true);
         }
     }
-    // ½ºÅ³ ¹öÆ° OnClickÀÌº¥Æ® ¹ÙÀÎµù
-    private void OnClickSkill1() { OnClickSkillIndex(0); }
-    private void OnClickSkill2() { OnClickSkillIndex(1); }
-    private void OnClickSkill3() { OnClickSkillIndex(2); }
-    private void OnClickSkill4() { OnClickSkillIndex(3); }
 
-    private void OnClickSkillIndex(int idx)
     {
-        if (PlayerCur == null) { return; }
-        if (EnemyCur == null) { return; }
-        SetCommandButtonsActive(false);
-        StartCoroutine(CoPlayerTurn_SkillThenEnemy(idx));
+        LogNow("Player normal attack");
+        if (!_isGameOver && !IsEnemyAllDown())
+        {
+            yield return StartCoroutine(CoEnemyActionAuto());
+        }
+        if (!_isGameOver)
+        {
+            BeginPlayerTurn(true);
+        }
+    {
+        LogNow("Player used a skill");
+        bool hasSkill = false;
+
+                            hasSkill = true;
+                            else if (model is RangedAttackType) { isRanged = true; }
+                            else if (model is HealType) { isHeal = true; }
+                            else if (model is DefenseType) { isDefense = true; }
+        if (hasSkill)
+        {
+            RegisterSkillUse(PlayerCur, skillIndex);
+        }
+
+        else if (isRanged)
+        {
+            if (myInfo != null) { yield return StartCoroutine(myInfo.RangedSkillSequence(otherInfo, skillIndex)); }
+        }
+        else if (isHeal)
+        {
+            if (myInfo != null) { yield return StartCoroutine(myInfo.HealSkillSequence(skillIndex)); }
+        }
+        else if (isDefense)
+        {
+            if (myInfo != null) { yield return StartCoroutine(myInfo.DefenseSkillSequence(skillIndex)); }
+        }
+            if (myInfo != null) { yield return new WaitForSeconds(0.25f); }
+
+        if (!_isGameOver && !IsEnemyAllDown())
+        {
+            yield return StartCoroutine(CoEnemyActionAuto());
+        }
+        if (!_isGameOver)
+        {
+            BeginPlayerTurn(true);
+        }
+        if (_isGameOver) { yield break; }
+        AdvanceCooldownsForTeam(false);
+        AdvanceDefenseBuffsForTeam(false);
+
+        EnemyDecision decision = DecideEnemyAction();
+
+        if (decision.actionType == EnemyActionType.Switch)
+        {
+            bool switched = ApplyEnemySwitch(decision.switchToIndex);
+            if (switched)
+            {
+                LogNow("Enemy switched Pokemon!");
+                yield return new WaitForSeconds(0.5f);
+            }
+            yield break;
+        }
+
+        if (decision.actionType == EnemyActionType.Skill)
+        {
+            yield return StartCoroutine(CoEnemyUseSkill(decision.skillIndex));
+            yield break;
+        }
+
+        yield return StartCoroutine(CoEnemyNormalAttack());
     }
 
-    /// <summary>
-    /// ÅÏ Ã³¸®
-    /// </summary>
-    private IEnumerator CoPlayerTurn_NormalAttackThenEnemy()
+    private IEnumerator CoEnemyNormalAttack()
     {
-        LogNow("ÇÃ·¹ÀÌ¾î ÀÏ¹İ°ø°İ");
+        LogNow("Enemy attack!");
 
-        // ¿¬Ãâ
-        if (myInfo != null) { yield return StartCoroutine(myInfo.NormalAttackSequence(otherInfo)); }
 
-        // ´ë¹ÌÁö Ã³¸®
-        yield return StartCoroutine(PlayerCur.Attack(EnemyCur, -1));
-
-        // KO/¶ó¿îµå ÆÇÁ¤
-        yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
-
-        // Àû Çàµ¿ ·£´ıÀ¸·Î Ã³¸®
-        if (!IsEnemyAllDown()) { yield return StartCoroutine(CoEnemyActionAuto()); }
-
-        SetCommandButtonsActive(true);
     }
 
-    private IEnumerator CoPlayerTurn_SkillThenEnemy(int skillIndex)
+    private IEnumerator CoEnemyUseSkill(int skillIndex)
     {
-        LogNow("ÇÃ·¹ÀÌ¾î ½ºÅ³ »ç¿ë");
+        if (EnemyCur == null) { yield break; }
+        if (PlayerCur == null) { yield break; }
 
-        // ½ºÅ³º° Å¸ÀÔ ÆÇº°(¿¬Ãâ ½Ã±×´ÏÃ³ À§ÇÔ)
         bool isMelee = false;
         bool isRanged = false;
+        bool isHeal = false;
+        bool isDefense = false;
+        bool hasSkill = false;
+
+        if (EnemyCur.skillTypeBehaviours != null)
+        {
+            if (skillIndex >= 0 && skillIndex < EnemyCur.skillTypeBehaviours.Length)
+            {
+                SkillTpye model = EnemyCur.skillTypeBehaviours[skillIndex];
+                if (model != null)
+                {
+                    hasSkill = true;
+                    if (model is MeleeAttackType) { isMelee = true; }
+                    else if (model is RangedAttackType) { isRanged = true; }
+                    else if (model is HealType) { isHeal = true; }
+                    else if (model is DefenseType) { isDefense = true; }
+                }
+            }
+        }
+
+        if (!hasSkill)
+        {
+            yield return StartCoroutine(CoEnemyNormalAttack());
+            yield break;
+        }
+
+        RegisterSkillUse(EnemyCur, skillIndex);
+
+        string skillName = "a skill";
+        if (EnemyCur.skillNames != null)
+        {
+            if (skillIndex >= 0 && skillIndex < EnemyCur.skillNames.Length)
+            {
+                string candidate = EnemyCur.skillNames[skillIndex];
+                if (!string.IsNullOrEmpty(candidate)) { skillName = candidate; }
+            }
+        }
+        LogNow("Enemy used " + skillName + "!");
+
+        if (isMelee)
+        {
+            if (otherInfo != null) { yield return StartCoroutine(otherInfo.MeleeSkillSequence(myInfo, skillIndex)); }
+        }
+        else if (isRanged)
+        {
+            if (otherInfo != null) { yield return StartCoroutine(otherInfo.RangedSkillSequence(myInfo, skillIndex)); }
+        }
+        else if (isHeal)
+        {
+            if (otherInfo != null) { yield return StartCoroutine(otherInfo.HealSkillSequence(skillIndex)); }
+        }
+        else if (isDefense)
+        {
+            if (otherInfo != null) { yield return StartCoroutine(otherInfo.DefenseSkillSequence(skillIndex)); }
+        }
+        else
+        {
+            if (otherInfo != null) { yield return new WaitForSeconds(0.25f); }
+        }
+
+        yield return StartCoroutine(EnemyCur.Attack(PlayerCur, skillIndex));
+
+        yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
+    }
+
+    private bool ApplyEnemySwitch(int toIndex)
+    {
+        List<Pokemon> team = PokemonGamemanager.EnemyTeam;
+        if (team == null) { return false; }
+        if (toIndex < 0) { return false; }
+        if (toIndex >= team.Count) { return false; }
+
+        Pokemon cand = team[toIndex];
+        if (cand == null) { return false; }
+        if (cand.Hp <= 0) { return false; }
+
+        enemyIndex = toIndex;
+        RefreshInfos();
+        return true;
+    }
+
+    private EnemyDecision DecideEnemyAction()
+    {
+        EnemyDecision decision = new EnemyDecision
+        {
+            actionType = EnemyActionType.NormalAttack,
+            skillIndex = -1,
+            switchToIndex = -1
+        };
+
+        Pokemon enemy = EnemyCur;
+        Pokemon player = PlayerCur;
+        if (enemy == null || player == null)
+        {
+            return decision;
+        }
+
+        float playerAdvantage = Pokemon.battleType[(int)player.type, (int)enemy.type];
+
+        if (enemy.Hp <= Mathf.Max(20, enemy.def * 2))
+        {
+            if (!IsSkillOnCooldown(enemy, 3))
+            {
+                decision.actionType = EnemyActionType.Skill;
+                decision.skillIndex = 3;
+                return decision;
+            }
+        }
+
+        if (playerAdvantage > 1.4f)
+        {
+            int switchIdx = FindEnemySwitchCandidate(playerAdvantage);
+            if (switchIdx >= 0)
+            {
+                decision.actionType = EnemyActionType.Switch;
+                decision.switchToIndex = switchIdx;
+                return decision;
+            }
+
+            if (!_defenseBuffStates.ContainsKey(enemy) && !IsSkillOnCooldown(enemy, 2))
+            {
+                decision.actionType = EnemyActionType.Skill;
+                decision.skillIndex = 2;
+                return decision;
+            }
+        }
+
+        int attackSkill = ChooseEnemyAttackSkill();
+        if (attackSkill >= 0)
+        {
+            decision.actionType = EnemyActionType.Skill;
+            decision.skillIndex = attackSkill;
+            return decision;
+        }
+
+        return decision;
+    }
+
+    private int FindEnemySwitchCandidate(float currentThreat)
+    {
+        List<Pokemon> team = PokemonGamemanager.EnemyTeam;
+        if (team == null) { return -1; }
+        if (PlayerCur == null) { return -1; }
+
+        int bestIndex = -1;
+        float bestMultiplier = currentThreat;
+        for (int i = 0; i < team.Count; i = i + 1)
+        {
+            if (i == enemyIndex) { continue; }
+            Pokemon cand = team[i];
+            if (cand == null) { continue; }
+            if (cand.Hp <= 0) { continue; }
+
+            float mult = Pokemon.battleType[(int)PlayerCur.type, (int)cand.type];
+            if (mult < bestMultiplier - 0.1f)
+            {
+                bestMultiplier = mult;
+                bestIndex = i;
+            }
+            else if (Mathf.Abs(mult - bestMultiplier) < 0.05f)
+            {
+                if (EnemyCur != null && cand.Hp > EnemyCur.Hp + 15)
+                {
+                    bestMultiplier = mult;
+                    bestIndex = i;
+                }
+            }
+        }
+        return bestIndex;
+    }
+
+    private int ChooseEnemyAttackSkill()
+    {
+        Pokemon enemy = EnemyCur;
+        Pokemon player = PlayerCur;
+        if (enemy == null || player == null) { return -1; }
+
+        float baseDamage = ComputeExpectedDamage(enemy, player, -1);
+        int bestSkill = -1;
+        float bestDamage = baseDamage;
+
+        for (int i = 0; i < 2; i = i + 1)
+        {
+            if (IsSkillOnCooldown(enemy, i)) { continue; }
+            float dmg = ComputeExpectedDamage(enemy, player, i);
+            if (dmg > bestDamage * 1.05f)
+            {
+                bestDamage = dmg;
+                bestSkill = i;
+            }
+        }
+
+        return bestSkill;
+    }
+
+    private float ComputeExpectedDamage(Pokemon attacker, Pokemon defender, int skillIndex)
+    {
+        if (attacker == null || defender == null) { return 0f; }
+
+        float typeMul = Pokemon.battleType[(int)attacker.type, (int)defender.type];
+        float raw = attacker.atk - (defender.def * 0.5f);
+        if (raw < 1f) { raw = 1f; }
+        float dmg = raw * typeMul;
+        int adjustedDamage = (int)((dmg <= 0f) ? 1f : dmg);
+
+        if (skillIndex >= 0 && attacker.skillTypeBehaviours != null)
+        {
+            if (skillIndex < attacker.skillTypeBehaviours.Length)
+            {
+                SkillTpye model = attacker.skillTypeBehaviours[skillIndex];
+                if (model != null)
+                {
+                    adjustedDamage = model.ComputeDamageOverride(attacker, defender, adjustedDamage);
+                }
+            }
+        }
+
+        return adjustedDamage;
+    }
+
+    public void ApplyDefenseBuffRuntime(Pokemon target, int amount, int durationTurns)
+    {
+        if (target == null) { return; }
+        if (amount <= 0) { return; }
+        if (durationTurns < 1) { durationTurns = 1; }
+
+        if (_defenseBuffStates.TryGetValue(target, out DefenseBuffState existing))
+        {
+            target.def = Mathf.Max(0, target.def - existing.amount);
+            _defenseBuffStates.Remove(target);
+        }
+
+        target.def = target.def + amount;
+        _defenseBuffStates[target] = new DefenseBuffState { amount = amount, remainingTurns = durationTurns };
+    }
+
+    private void RestoreDefenseBuffState(Pokemon target, int amount, int remainingTurns)
+    {
+        if (target == null) { return; }
+        _defenseBuffStates[target] = new DefenseBuffState { amount = amount, remainingTurns = remainingTurns };
+    }
+
+    private void RemoveDefenseBuff(Pokemon target)
+    {
+        if (target == null) { return; }
+        if (_defenseBuffStates.TryGetValue(target, out DefenseBuffState state))
+        {
+            target.def = Mathf.Max(0, target.def - state.amount);
+            _defenseBuffStates.Remove(target);
+        }
+    }
+
+    private void ClearStateForPokemon(Pokemon target)
+    {
+        if (target == null) { return; }
+        _skillCooldowns.Remove(target);
+        RemoveDefenseBuff(target);
+    }
+
+    public bool TryApplyCounterDamage(Pokemon defender, Pokemon attacker)
+    {
+        if (defender == null || attacker == null) { return false; }
+        if (!_defenseBuffStates.TryGetValue(defender, out DefenseBuffState state)) { return false; }
+        if (state.remainingTurns <= 0) { return false; }
+        if (Random.value > 0.2f) { return false; }
+
+        int dmg = Mathf.Max(1, Mathf.RoundToInt(attacker.Hp * 0.1f));
+        attacker.Hp = attacker.Hp - dmg;
+        LogNow(defender.name + " countered! " + attacker.name + " took " + dmg + " damage.");
+        return true;
+    }
+
+    private void ShowGameOver(string message)
+    {
+        if (_isGameOver) { return; }
+        _isGameOver = true;
+
+        SetCommandButtonsActive(false);
+        SetSkillButtonsInteractable(false);
+        if (shopPanel != null) { shopPanel.SetActive(false); }
+        if (switchPanel != null) { switchPanel.SetActive(false); }
+
+        if (gameOverPanel != null) { gameOverPanel.SetActive(true); }
+        if (gameOverText != null) { gameOverText.text = message; }
+
+        ClearSavedSnapshot();
+    }
+
+    private void CheckAndHandleGameOver()
+    {
+        if (_isGameOver) { return; }
+
+        bool playerDown = PokemonGamemanager.FirstAliveIndex(PokemonGamemanager.PlayerTeam) < 0;
+        bool enemyDown = IsEnemyAllDown();
+
+        if (playerDown)
+        {
+            ShowGameOver("Defeat...");
+            return;
+        }
+
+        if (round >= 5)
+        {
+            string message = enemyDown ? "All rounds cleared!" : "Reached round 5! Challenge complete.";
+            ShowGameOver(message);
+        }
+    }
+
+    private void SaveRoundSnapshotToPrefs()
+    {
+        if (_isGameOver) { return; }
+        RoundSnapshot snapshot = GetRoundSnapshot();
+        if (snapshot == null) { return; }
+
+        string json = JsonUtility.ToJson(snapshot);
+        PlayerPrefs.SetString(ROUND_SNAPSHOT_PREF_KEY, json);
+        PlayerPrefs.Save();
+    }
+
+    private void LoadRoundSnapshotIfAvailable()
+    {
+        if (!PlayerPrefs.HasKey(ROUND_SNAPSHOT_PREF_KEY)) { return; }
+        string json = PlayerPrefs.GetString(ROUND_SNAPSHOT_PREF_KEY, string.Empty);
+        if (string.IsNullOrEmpty(json)) { return; }
+
+        try
+        {
+            RoundSnapshot snapshot = JsonUtility.FromJson<RoundSnapshot>(json);
+            if (snapshot != null)
+            {
+                SetRoundFromSave(snapshot);
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    public RoundSnapshot GetRoundSnapshot()
+    {
+        if (PokemonGamemanager.PlayerTeam == null) { return null; }
+        if (PokemonGamemanager.EnemyTeam == null) { return null; }
+
+        RoundSnapshot snapshot = new RoundSnapshot();
+        snapshot.round = round;
+        snapshot.playerIndex = playerIndex;
+        snapshot.enemyIndex = enemyIndex;
+
+        snapshot.playerHp = BuildHpArray(PokemonGamemanager.PlayerTeam);
+        snapshot.enemyHp = BuildHpArray(PokemonGamemanager.EnemyTeam);
+
+        List<SkillCooldownSnapshot> cooldowns = new List<SkillCooldownSnapshot>();
+        AppendCooldownSnapshots(PokemonGamemanager.PlayerTeam, true, cooldowns);
+        AppendCooldownSnapshots(PokemonGamemanager.EnemyTeam, false, cooldowns);
+        snapshot.cooldowns = cooldowns.ToArray();
+
+        List<DefenseBuffSnapshot> buffSnaps = new List<DefenseBuffSnapshot>();
+        foreach (var kv in _defenseBuffStates)
+        {
+            Pokemon key = kv.Key;
+            DefenseBuffState value = kv.Value;
+            int teamIndex = FindPokemonIndex(PokemonGamemanager.PlayerTeam, key);
+            bool isPlayer = true;
+            if (teamIndex < 0)
+            {
+                teamIndex = FindPokemonIndex(PokemonGamemanager.EnemyTeam, key);
+                isPlayer = false;
+            }
+            if (teamIndex < 0) { continue; }
+
+            DefenseBuffSnapshot snap = new DefenseBuffSnapshot
+            {
+                isPlayer = isPlayer,
+                teamIndex = teamIndex,
+                amount = value.amount,
+                remainingTurns = value.remainingTurns
+            };
+            buffSnaps.Add(snap);
+        }
+        snapshot.defenseBuffs = buffSnaps.ToArray();
+
+        return snapshot;
+    }
+
+    public void SetRoundFromSave(RoundSnapshot snapshot)
+    {
+        if (snapshot == null) { return; }
+
+        round = snapshot.round;
+        playerIndex = snapshot.playerIndex;
+        enemyIndex = snapshot.enemyIndex;
+
+        ApplyHpArray(PokemonGamemanager.PlayerTeam, snapshot.playerHp);
+        ApplyHpArray(PokemonGamemanager.EnemyTeam, snapshot.enemyHp);
+
+        _skillCooldowns.Clear();
+        if (snapshot.cooldowns != null)
+        {
+            foreach (SkillCooldownSnapshot entry in snapshot.cooldowns)
+            {
+                List<Pokemon> team = entry.isPlayer ? PokemonGamemanager.PlayerTeam : PokemonGamemanager.EnemyTeam;
+                if (team == null) { continue; }
+                if (entry.teamIndex < 0 || entry.teamIndex >= team.Count) { continue; }
+                Pokemon target = team[entry.teamIndex];
+                if (target == null) { continue; }
+
+                int[] arr = GetOrCreateCooldownArray(target);
+                if (arr == null) { continue; }
+                for (int i = 0; i < arr.Length && i < entry.cooldowns.Length; i = i + 1)
+                {
+                    arr[i] = entry.cooldowns[i];
+                }
+            }
+        }
+
+        _defenseBuffStates.Clear();
+        if (snapshot.defenseBuffs != null)
+        {
+            foreach (DefenseBuffSnapshot entry in snapshot.defenseBuffs)
+            {
+                List<Pokemon> team = entry.isPlayer ? PokemonGamemanager.PlayerTeam : PokemonGamemanager.EnemyTeam;
+                if (team == null) { continue; }
+                if (entry.teamIndex < 0 || entry.teamIndex >= team.Count) { continue; }
+                Pokemon target = team[entry.teamIndex];
+                if (target == null) { continue; }
+                RestoreDefenseBuffState(target, entry.amount, entry.remainingTurns);
+            }
+        }
+
+        RefreshInfos();
+        RefreshRoundLabel();
+        RefreshSkillButtonLabelsFromPlayer();
+        RefreshSwitchButtonLabels();
+    }
+
+    private int[] BuildHpArray(List<Pokemon> team)
+    {
+        if (team == null) { return new int[0]; }
+        int[] arr = new int[team.Count];
+        for (int i = 0; i < team.Count; i = i + 1)
+        {
+            Pokemon p = team[i];
+            arr[i] = (p != null) ? p.Hp : 0;
+        }
+        return arr;
+    }
+
+    private void ApplyHpArray(List<Pokemon> team, int[] values)
+    {
+        if (team == null) { return; }
+        if (values == null) { return; }
+        int count = Mathf.Min(team.Count, values.Length);
+        for (int i = 0; i < count; i = i + 1)
+        {
+            Pokemon p = team[i];
+            if (p == null) { continue; }
+            p.Hp = values[i];
+        }
+    }
+
+    private void AppendCooldownSnapshots(List<Pokemon> team, bool isPlayer, List<SkillCooldownSnapshot> snapshots)
+    {
+        if (team == null) { return; }
+        for (int i = 0; i < team.Count; i = i + 1)
+        {
+            Pokemon p = team[i];
+            if (p == null) { continue; }
+            int[] arr = GetOrCreateCooldownArray(p);
+            SkillCooldownSnapshot snap = new SkillCooldownSnapshot
+            {
+                isPlayer = isPlayer,
+                teamIndex = i
+            };
+            if (arr != null)
+            {
+                for (int j = 0; j < snap.cooldowns.Length && j < arr.Length; j = j + 1)
+                {
+                    snap.cooldowns[j] = arr[j];
+                }
+            }
+            snapshots.Add(snap);
+        }
+    }
+
+    private int FindPokemonIndex(List<Pokemon> team, Pokemon target)
+    {
+        if (team == null) { return -1; }
+        for (int i = 0; i < team.Count; i = i + 1)
+        {
+            if (team[i] == target) { return i; }
+        }
+        return -1;
+    }
+
+    private void ClearSavedSnapshot()
+    {
+        if (PlayerPrefs.HasKey(ROUND_SNAPSHOT_PREF_KEY))
+        {
+            PlayerPrefs.DeleteKey(ROUND_SNAPSHOT_PREF_KEY);
+            PlayerPrefs.Save();
+        }
+    }
+
+                Pokemon defeated = EnemyCur;
+                ClearStateForPokemon(defeated);
+
+                    LogNow("Enemy switched");
+                    LogNow("Round cleared");
+
+                Pokemon defeatedPlayer = PlayerCur;
+                ClearStateForPokemon(defeatedPlayer);
+
+                    LogNow("Auto switch");
+                    LogNow("Player party defeated");
+        CheckAndHandleGameOver();
+
         bool isHeal = false;
         bool isDefense = false;
 
@@ -444,7 +1250,7 @@ public class PokemonBattleManager : MonoBehaviour
             }
         }
 
-        // ½ºÅ³º° ¿¬Ãâ ÆÇº°
+        // ìŠ¤í‚¬ë³„ ì—°ì¶œ íŒë³„
         if (isMelee)
         {
             if (myInfo != null) { yield return StartCoroutine(myInfo.MeleeSkillSequence(otherInfo, skillIndex)); }
@@ -475,13 +1281,13 @@ public class PokemonBattleManager : MonoBehaviour
             }
         }
 
-        // ´ë¹ÌÁö/È¿°ú °è»ê
+        // ëŒ€ë¯¸ì§€/íš¨ê³¼ ê³„ì‚°
         yield return StartCoroutine(PlayerCur.Attack(EnemyCur, skillIndex));
 
-        // KO/¶ó¿îµå ÆÇÁ¤½Ã ½ÇÇà
+        // KO/ë¼ìš´ë“œ íŒì •ì‹œ ì‹¤í–‰
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
 
-        // Àû Çàµ¿
+        // ì  í–‰ë™
         if (!IsEnemyAllDown()) { yield return StartCoroutine(CoEnemyActionAuto()); }
 
         SetCommandButtonsActive(true);
@@ -492,24 +1298,24 @@ public class PokemonBattleManager : MonoBehaviour
         if (EnemyCur == null) { yield break; }
         if (PlayerCur == null) { yield break; }
 
-        LogNow("ÀûÀÇ °ø°İ");
+        LogNow("ì ì˜ ê³µê²©");
 
-        // ¿¬Ãâ
+        // ì—°ì¶œ
         if (otherInfo != null) { yield return StartCoroutine(otherInfo.NormalAttackSequence(myInfo)); }
 
-        // ´ë¹ÌÁö
+        // ëŒ€ë¯¸ì§€
         yield return StartCoroutine(EnemyCur.Attack(PlayerCur, -1));
 
-        // KO/¶ó¿îµå
+        // KO/ë¼ìš´ë“œ
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
     }
 
     /// <summary>
-    /// KO/¶ó¿îµå Á¾·á
+    /// KO/ë¼ìš´ë“œ ì¢…ë£Œ
     /// </summary>
     private IEnumerator AfterAnyDamageAndCheckKOs()
     {
-        // Àû ´Ù¿î -> ±³Ã¼ ¶Ç´Â ¶ó¿îµå Áõ°¡
+        // ì  ë‹¤ìš´ -> êµì²´ ë˜ëŠ” ë¼ìš´ë“œ ì¦ê°€
         if (EnemyCur != null)
         {
             if (EnemyCur.Hp <= 0)
@@ -519,18 +1325,18 @@ public class PokemonBattleManager : MonoBehaviour
                 {
                     enemyIndex = nextEnemy;
                     RefreshInfos();
-                    LogNow("Àû ±³Ã¼");
+                    LogNow("ì  êµì²´");
                 }
                 else
                 {
                     round = round + 1;
                     RefreshRoundLabel();
-                    LogNow("¶ó¿îµå Å¬¸®¾î");
+                    LogNow("ë¼ìš´ë“œ í´ë¦¬ì–´");
                 }
             }
         }
 
-        // ÇÃ·¹ÀÌ¾î ´Ù¿î -> ÀÚµ¿ ±³Ã¼
+        // í”Œë ˆì´ì–´ ë‹¤ìš´ -> ìë™ êµì²´
         if (PlayerCur != null)
         {
             if (PlayerCur.Hp <= 0)
@@ -542,11 +1348,11 @@ public class PokemonBattleManager : MonoBehaviour
                     RefreshInfos();
                     RefreshSkillButtonLabelsFromPlayer();
                     RefreshSwitchButtonLabels();
-                    LogNow("ÀÚµ¿ ±³Ã¼");
+                    LogNow("ìë™ êµì²´");
                 }
                 else
                 {
-                    LogNow("ÇÃ·¹ÀÌ¾î Àü¸ê");
+                    LogNow("í”Œë ˆì´ì–´ ì „ë©¸");
                 }
             }
         }
@@ -592,7 +1398,7 @@ public class PokemonBattleManager : MonoBehaviour
         return true;
     }
 
-    // ÅØ½ºÆ® ·Î±× Å½»ö
+    // í…ìŠ¤íŠ¸ ë¡œê·¸ íƒìƒ‰
     private void LogNow(string s)
     {
         if (textLog == null) { return; }
