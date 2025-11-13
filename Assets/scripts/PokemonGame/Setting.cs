@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// @ 설정 패널 전담 컴포넌트(공용)
+/// 설정 패널 전담 컴포넌트(공용)
 /// </summary>
 public class Setting : MonoBehaviour
 {
@@ -100,7 +100,7 @@ public class Setting : MonoBehaviour
     {
         SetSettingsMode(false);
         Scene active = SceneManager.GetActiveScene();
-        // @ 현재 씬 재시작 (이름→인덱스)
+        // 현재 씬 재시작 (이름->인덱스)
         SceneManager.LoadScene(active.buildIndex);
     }
 
@@ -111,7 +111,7 @@ public class Setting : MonoBehaviour
         {
             if (exitToStartSaveSceneName.Length > 0)
             {
-                SceneManager.LoadScene(0);   // @ "PokemonStart"
+                SceneManager.LoadScene(0);   // "PokemonStart"씬으로 전환
                 return;
             }
         }
@@ -124,11 +124,11 @@ public class Setting : MonoBehaviour
 
         if (on)
         {
-            // @ 패널만 활성화 & 항상 위로 정렬은 기존 BringSettingsToFront로 처리
+            // 패널만 활성화 & 항상 위로 정렬은 기존 BringSettingsToFront로 처리
             BringSettingsToFront();
             settingsPanel.SetActive(true);
 
-            // @ 자식 버튼들도 보장 @ 비활성화였다면 활성화
+            // 자식 버튼들도 보장, 비활성화였다면 활성화
             if (settingsRestartBtn != null)
             {
                 settingsRestartBtn.gameObject.SetActive(true);
@@ -144,7 +144,7 @@ public class Setting : MonoBehaviour
         }
         else
         {
-            // @ 패널만 비활성화 @ 다른 오브젝트는 건드리지 않음
+            // 패널만 비활성화, 다른 오브젝트는 건드리지 않음
             settingsPanel.SetActive(false);
         }
     }
@@ -198,7 +198,7 @@ public class Setting : MonoBehaviour
         return t.IsChildOf(parent);
     }
     /// <summary>
-    /// @ 런타임: uiRoot가 비어 있을 때만 씬의 Canvas(또는 힌트)로 지정
+    /// 런타임: uiRoot가 비어 있을 때만 씬의 Canvas(또는 힌트)로 지정
     /// </summary>
     public void EnsureUiRootAtRuntime(Transform root)
     {
@@ -209,7 +209,7 @@ public class Setting : MonoBehaviour
     }
 
     /// <summary>
-    /// @ 런타임: 설정 패널을 화면 중앙(0,0,0)으로 강제 배치
+    /// 런타임: 설정 패널을 화면 중앙(0,0,0)으로 강제 배치
     /// </summary>
     public void CenterPanelAtRuntime()
     {
@@ -229,7 +229,7 @@ public class Setting : MonoBehaviour
     }
 
     /// <summary>
-    /// @ 런타임: Nested Canvas 정렬 무시 + 정렬 순서 지정(최상단 보장)
+    /// 런타임: Nested Canvas 정렬 무시 + 정렬 순서 지정(최상단 보장)
     /// </summary>
     public void EnsureNestedCanvasTopmostAtRuntime(int order)
     {
@@ -243,15 +243,15 @@ public class Setting : MonoBehaviour
         sc.sortingOrder = order;
     }
 
-    // @ 패널을 항상 위로 보이게 정렬 보장 + 같은 부모 내 마지막 형제로 이동
+    // 패널을 항상 위로 보이게 정렬 보장 + 같은 부모 내 마지막 형제로 이동
     public void BringSettingsToFront()
     {
-        // @ Nested Canvas 최상단 정렬 보장
+        // Nested Canvas 최상단 정렬 보장
         EnsureNestedCanvasTopmostAtRuntime(settingsSortOrder);
 
-        // @ 같은 Canvas 안에서 가장 위로
+        // 같은 Canvas 안에서 가장 위로 배치
         if (settingsPanel != null) { settingsPanel.transform.SetAsLastSibling();}
-        // @ 패널이 비어 있으면 루트 자체를 위로
+        // 패널이 비어 있으면 루트 자체를 위로 이동
         else { transform.SetAsLastSibling(); }
     }
 }

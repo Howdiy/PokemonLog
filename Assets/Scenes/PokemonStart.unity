@@ -151,18 +151,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 114e4b09ecf5f3f4989013f0d6e56ed5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  battleStart: {fileID: 0}
-  settingsRef: {fileID: 0}
-  settingPrefab: {fileID: 0}
-  settingsUiRootHint: {fileID: 0}
+  settingsPrefab: {fileID: 0}
   uiRoot: {fileID: 0}
-  settingsSortOrder: 5000
+  startBt: {fileID: 2049413870}
+  continueBt: {fileID: 1279612127}
+  exitBt: {fileID: 746538157}
   titleText: {fileID: 0}
-  bts: []
-  goBattleButton: {fileID: 0}
-  StartBT: {fileID: 2049413870}
-  ContinueBT: {fileID: 1279612127}
-  ExitBT: {fileID: 746538157}
+  goBattleBt: {fileID: 0}
+  pika: {fileID: 0}
+  paily: {fileID: 0}
+  goBook: {fileID: 0}
+  eSang: {fileID: 0}
 --- !u!4 &202796268
 Transform:
   m_ObjectHideFlags: 0

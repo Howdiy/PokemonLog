@@ -17,10 +17,10 @@ public class Paily : Pokemon
         type = Tpye.fire;
         index = PokemonIndex.paily;
 
-        skillTypeBehaviours[0] = new RangedAttackType();
+        skillTypeBehaviours[0] = new MeleeAttackType();
         skillTypeBehaviours[1] = new RangedAttackType();
         skillTypeBehaviours[2] = new MeleeAttackType();
-        skillTypeBehaviours[3] = new HealType();
+        skillTypeBehaviours[3] = new RangedAttackType();
 
         atlasResourcePath = "PailySpriteAtlas";
         spriteKeyChoice = "PAILY";

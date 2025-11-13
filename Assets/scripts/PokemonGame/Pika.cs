@@ -20,7 +20,7 @@ public class Pika : Pokemon
         skillTypeBehaviours[0] = new RangedAttackType();
         skillTypeBehaviours[1] = new RangedAttackType();
         skillTypeBehaviours[2] = new MeleeAttackType();
-        skillTypeBehaviours[3] = new HealType();
+        skillTypeBehaviours[3] = new MeleeAttackType();
 
         atlasResourcePath = "PikaSpriteAtlas";
         spriteKeyChoice = "PIKACH";

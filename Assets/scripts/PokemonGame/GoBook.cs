@@ -17,13 +17,13 @@ public class GoBook : Pokemon
         type = Tpye.water;
         index = PokemonIndex.goBook;
 
-        skillTypeBehaviours[0] = new RangedAttackType();
+        skillTypeBehaviours[0] = new MeleeAttackType();
         skillTypeBehaviours[1] = new RangedAttackType();
-        skillTypeBehaviours[2] = new MeleeAttackType();
-        skillTypeBehaviours[3] = new HealType();
+        skillTypeBehaviours[2] = new DefenseType();
+        skillTypeBehaviours[3] = new RangedAttackType();
 
         atlasResourcePath = "GoBookSpriteAtlas";
-        spriteKeyChoice = "GOBOOK";
+        spriteKeyChoice = "GOBOOKIE";
         spriteKeyBattleIdle = "GOBOOK2";
         spriteKeyAttack = "GOBOOK4";
         spriteKeySkill = "GOBOOK3";

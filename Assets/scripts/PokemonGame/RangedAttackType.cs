@@ -7,7 +7,7 @@ public class RangedAttackType : SkillTpye
 {
     public override int ComputeDamageOverride(Pokemon self, Pokemon other, int baseDamage)
     {
-        // @ (atk - (def + speed)) * 배율
+        // 데미지 식: (atk - (def + speed)) * 배율
         float typeMul = Pokemon.battleType[(int)self.type, (int)other.type];
 
         float raw = (float)self.atk - ((float)other.def + (float)other.speed);

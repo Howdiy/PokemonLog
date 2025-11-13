@@ -167,21 +167,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   settingsPrefab: {fileID: 7642222773169062627, guid: eeec9875f69b74d49aa8aa555246e992, type: 3}
-  settingsParentHint: {fileID: 516236818}
-  settingsUiRootHint: {fileID: 0}
-  uiRoot: {fileID: 0}
-  settingsSortOrder: 5000
-  settingsRef: {fileID: 0}
+  uiRoot: {fileID: 516236818}
+  startBt: {fileID: 0}
+  continueBt: {fileID: 0}
+  exitBt: {fileID: 0}
   titleText: {fileID: 1561559263}
-  bts:
-  - {fileID: 1716860815}
-  - {fileID: 1151097989}
-  - {fileID: 70382501}
-  - {fileID: 576465988}
-  StartBT: {fileID: 0}
-  ContinueBT: {fileID: 0}
-  ExitBT: {fileID: 0}
   goBattleBt: {fileID: 352040642}
+  pika: {fileID: 1716860815}
+  paily: {fileID: 1151097989}
+  goBook: {fileID: 70382501}
+  eSang: {fileID: 576465988}
 --- !u!1 &70382499
 GameObject:
   m_ObjectHideFlags: 0

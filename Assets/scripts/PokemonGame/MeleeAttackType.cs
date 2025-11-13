@@ -7,13 +7,13 @@ public class MeleeAttackType : SkillTpye
 {
     public override int ComputeDamageOverride(Pokemon self, Pokemon other, int baseDamage)
     {
-        // @ (atk - def) * 배율 + 명중 판정
+        // 데미지 식: (atk - def) * 배율 + 명중 판정
         float typeMul = Pokemon.battleType[(int)self.type, (int)other.type];
 
         float raw = (float)self.atk - (float)other.def;
         raw = (raw < 1f) ? 1f : raw;
 
-        // @ speed 퍼센트 기반 명중률 가정 @ 100 - speed @ 5..95 범위
+        // speed 퍼센트 기반 명중률 가정(100 - speed @ 5~95까지 범위)
         int sp = other.speed;
         int spPercent = (sp < 0) ? 0 : sp;
         spPercent = (spPercent > 100) ? 100 : spPercent;

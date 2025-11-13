@@ -17,13 +17,13 @@ public class Esang : Pokemon
         type = Tpye.grass;
         index = PokemonIndex.eSang;
 
-        skillTypeBehaviours[0] = new RangedAttackType();
-        skillTypeBehaviours[1] = new RangedAttackType();
-        skillTypeBehaviours[2] = new MeleeAttackType();
+        skillTypeBehaviours[0] = new MeleeAttackType();
+        skillTypeBehaviours[1] = new MeleeAttackType();
+        skillTypeBehaviours[2] = new RangedAttackType();
         skillTypeBehaviours[3] = new HealType();
 
         atlasResourcePath = "EsangSpriteAtlas";
-        spriteKeyChoice = "ESANG";
+        spriteKeyChoice = "ESANGSEE";
         spriteKeyBattleIdle = "ESANG2";
         spriteKeyAttack = "ESANG4";
         spriteKeySkill = "ESANG3";

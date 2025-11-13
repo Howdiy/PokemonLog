@@ -2,78 +2,41 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.U2D;
 
+/// <summary>
+/// @ 스프라이트 아틀라스 로더
+/// @ Resources 경로에서 SpriteAtlas를 불러오고, 내부 스프라이트를 이름으로 반환
+/// </summary>
 public static class PokemonSpriteAtlasProvider
 {
-    private static readonly Dictionary<string, SpriteAtlas> CachedAtlases = new Dictionary<string, SpriteAtlas>();
-    private static bool _initialized;
-    private static SpriteAtlas _tmpAtlas;
-    private static void EnsureInitialized()
+    private static Dictionary<string, SpriteAtlas> _cache = new Dictionary<string, SpriteAtlas>();
+
+    /// <summary>
+    /// @ atlasResourceName: Resources 폴더 기준 아틀라스 리소스 이름
+    /// @ spriteName: 아틀라스 내부 스프라이트 이름
+    /// </summary>
+    public static Sprite GetSprite(string atlasResourceName, string spriteName)
     {
-        if (_initialized)
-        {
-            return;
-        }
-
-        SpriteAtlasManager.atlasRegistered += OnAtlasRegistered;
-        SpriteAtlasManager.atlasRequested += OnAtlasRequested;
-        _initialized = true;
-    }
-
-    private static void OnAtlasRegistered(SpriteAtlas atlas)
-    {
-        if (atlas == null)
-        {
-            return;
-        }
-
-        CachedAtlases[atlas.name] = atlas;
-    }
-
-    private static void AssignAtlas(SpriteAtlas loaded)
-    {
-        _tmpAtlas = loaded;
-    }
-    private static void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> onCompleted)
-    {
-        SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasName);
-        if (atlas == null)
-        {
-            onCompleted?.Invoke(null);
-            return;
-        }
-
-        CachedAtlases[atlas.name] = atlas;
-        onCompleted?.Invoke(atlas);
-    }
-
-    public static SpriteAtlas GetAtlas(string atlasName)
-    {
-        EnsureInitialized();
-
-        if (string.IsNullOrEmpty(atlasName))
+        if (string.IsNullOrEmpty(atlasResourceName))
         {
             return null;
         }
 
-        if (CachedAtlases.TryGetValue(atlasName, out SpriteAtlas cached))
+        SpriteAtlas atlas;
+        bool ok = _cache.TryGetValue(atlasResourceName, out atlas);
+        if (!ok || atlas == null)
         {
-            return cached;
+            atlas = Resources.Load<SpriteAtlas>(atlasResourceName);
+            if (atlas != null)
+            {
+                _cache[atlasResourceName] = atlas;
+            }
         }
 
-        SpriteAtlas atlas = Resources.Load<SpriteAtlas>(atlasName);
-        if (atlas != null)
+        if (atlas == null)
         {
-            CachedAtlases[atlas.name] = atlas;
-            return atlas;
+            return null;
         }
-        OnAtlasRequested(atlasName, AssignAtlas);
-        atlas = _tmpAtlas;
-        _tmpAtlas = null;
-        return atlas;
-    }
 
-    public static void Clear()
-    {
-        CachedAtlases.Clear();
+        return atlas.GetSprite(spriteName);
     }
 }
