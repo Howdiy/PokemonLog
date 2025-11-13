@@ -1,3 +1,5 @@
+using TMPro;
+
 /// <summary>
 /// PokemonBattleManager와 Pokemon 간의 전투 FX 및 버프 확장 메서드 모음.
 /// </summary>
@@ -15,8 +17,12 @@ public static class BattleFxAndBuffExtensions
         // PokemonBattleManager 내부 런타임 상태에 버프를 등록하고 수치를 반영한다.
         bm.ApplyDefenseBuffRuntime(target, amount, durationTurns);
 
-        // 텍스트 로그는 호출부(예: Pokemon.Attack)에서 처리하여
-        // 한 번만 출력되도록 한다.
+        // 텍스트 로그를 중앙에서 출력하여 호출부마다 중복되지 않도록 한다.
+        TextMeshProUGUI log = bm.textLog;
+        if (log != null)
+        {
+            log.text = target.name + "의 방어가 " + amount.ToString() + " 상승하였다.";
+        }
     }
 
     /// <summary>

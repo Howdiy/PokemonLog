@@ -153,10 +153,6 @@ public class Pokemon
             if (PokemonBattleManager.instance != null)
             {
                 PokemonBattleManager.instance.ApplyDefenseBuff(this, add);
-                if (PokemonBattleManager.instance.textLog != null)
-                {
-                    PokemonBattleManager.instance.textLog.text = name + "의 방어가 " + add.ToString() + " 상승하였다.";
-                }
             }
             yield return new WaitForSeconds(0.5f);
             yield break;
