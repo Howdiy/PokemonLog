@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// @ 이상해씨
+/// 이상해씨
 /// </summary>
 public class Esang : Pokemon
 {

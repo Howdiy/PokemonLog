@@ -368,7 +368,7 @@ public class PokemonBattleManager : MonoBehaviour
             switchPanel.SetActive(true);
         }
     }
-
+    // 스킬 버튼 OnClick이벤트 바인딩
     private void OnClickSkill1() { OnClickSkillIndex(0); }
     private void OnClickSkill2() { OnClickSkillIndex(1); }
     private void OnClickSkill3() { OnClickSkillIndex(2); }
@@ -408,7 +408,7 @@ public class PokemonBattleManager : MonoBehaviour
     {
         LogNow("플레이어 스킬 사용");
 
-        // 스킬별 타입 판별(연출 시그니처 위해)
+        // 스킬별 타입 판별(연출 시그니처 위함)
         bool isMelee = false;
         bool isRanged = false;
         bool isHeal = false;
@@ -494,18 +494,18 @@ public class PokemonBattleManager : MonoBehaviour
 
         LogNow("적의 공격");
 
-        // @ 연출
+        // 연출
         if (otherInfo != null) { yield return StartCoroutine(otherInfo.NormalAttackSequence(myInfo)); }
 
-        // @ 대미지
+        // 대미지
         yield return StartCoroutine(EnemyCur.Attack(PlayerCur, -1));
 
-        // @ KO/라운드
+        // KO/라운드
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
     }
 
     /// <summary>
-    /// KO/라운드
+    /// KO/라운드 종료
     /// </summary>
     private IEnumerator AfterAnyDamageAndCheckKOs()
     {
@@ -592,7 +592,7 @@ public class PokemonBattleManager : MonoBehaviour
         return true;
     }
 
-    // 로그
+    // 텍스트 로그 탐색
     private void LogNow(string s)
     {
         if (textLog == null) { return; }

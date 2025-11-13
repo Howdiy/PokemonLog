@@ -16,26 +16,17 @@ public static class PokemonSpriteAtlasProvider
     /// </summary>
     public static Sprite GetSprite(string atlasResourceName, string spriteName)
     {
-        if (string.IsNullOrEmpty(atlasResourceName))
-        {
-            return null;
-        }
+        if (string.IsNullOrEmpty(atlasResourceName))    { return null; }
 
         SpriteAtlas atlas;
         bool ok = _cache.TryGetValue(atlasResourceName, out atlas);
         if (!ok || atlas == null)
         {
             atlas = Resources.Load<SpriteAtlas>(atlasResourceName);
-            if (atlas != null)
-            {
-                _cache[atlasResourceName] = atlas;
-            }
+            if (atlas != null)  { _cache[atlasResourceName] = atlas; }
         }
 
-        if (atlas == null)
-        {
-            return null;
-        }
+        if (atlas == null)  { return null; }
 
         return atlas.GetSprite(spriteName);
     }

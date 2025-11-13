@@ -4,9 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// @ PokemonInfo
-/// @ 스프라이트/이름/HP UI 바인딩 + 공격/스킬 연출(이펙트 생성, 이동, 삭제)
-/// @ 실제 대미지 계산은 Pokemon.Attack()에서 처리
+/// 스프라이트/이름/HP UI 바인딩 + 공격/스킬 연출(이펙트 생성, 이동, 삭제)
+/// 실제 대미지 계산은 Pokemon.Attack()에서 처리
 /// </summary>
 public class PokemonInfo : MonoBehaviour
 {
@@ -24,7 +23,7 @@ public class PokemonInfo : MonoBehaviour
     private bool _isMoving = false;
 
     /// <summary>
-    /// @ 포켓몬 데이터 연결 및 기본 UI 갱신
+    /// 포켓몬 데이터 연결 및 기본 UI 갱신
     /// </summary>
     public void Bind(Pokemon p)
     {
@@ -47,7 +46,7 @@ public class PokemonInfo : MonoBehaviour
     }
 
     /// <summary>
-    /// @ 전투 대기 포즈
+    /// 전투 대기 포즈
     /// </summary>
     public void ApplyBattleIdlePose()
     {
@@ -85,7 +84,7 @@ public class PokemonInfo : MonoBehaviour
         return "";
     }
 
-    /// <summary> @ 대기/상점/회복/방어 용 키: 적=...1, 플레이어=...2 </summary>
+    /// <summary>  대기/상점/회복/방어용 아틀라스 키: 적=...1, 플레이어=...2 </summary>
     private string ResolveBattleIdleKey()
     {
         string p = ResolvePrefix();
@@ -93,7 +92,7 @@ public class PokemonInfo : MonoBehaviour
         return isPlayerSide ? (p + "2") : (p + "1");
     }
 
-    /// <summary> @ 근접/원거리/공격 용 키: 적=...3, 플레이어=...4 </summary>
+    /// <summary> 근접/원거리/공격용 아틀라스 키: 적=...3, 플레이어=...4 </summary>
     private string ResolveOffenseKey()
     {
         string p = ResolvePrefix();
@@ -110,14 +109,11 @@ public class PokemonInfo : MonoBehaviour
         Sprite s = PokemonSpriteAtlasProvider.GetSprite(targetPokemon.atlasResourcePath, key);
         if (s != null) { image.sprite = s; }
     }
-
-    // ======================================================================
-    // @ 연출 시퀀스(이펙트는 SkillType 레지스트리에서 가져옴)
-    // ======================================================================
-
+    
     /// <summary>
-    /// @ 일반공격: 2/3 지점까지 이동 -> 피격 위치에서 공용 이펙트 1회 -> 원위치 복귀
+    /// 공격 이펙트 시퀀스(이펙트는 SkillType 레지스트리에서 가져옴)
     /// </summary>
+    // 일반공격: 2/3 지점까지 이동 -> 피격 위치에서 공용 이펙트 1회 -> 원위치 복귀
     public IEnumerator NormalAttackSequence(PokemonInfo otherInfo)
     {
         if (image == null) { yield break; }
@@ -132,20 +128,14 @@ public class PokemonInfo : MonoBehaviour
         ApplyOffenseSprite();
 
         GameObject prefab = null;
-        if (SkillType.instance != null)
-        {
-            prefab = SkillType.instance.GetNormalAttackFx();
-        }
+        if (SkillType.instance != null) { prefab = SkillType.instance.GetNormalAttackFx(); }
         SpawnOneShotFxAt(prefab, otherInfo.image.transform.position);
 
         yield return StartCoroutine(MoveImageTo(startPos));
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-
-    /// <summary>
-    /// @ 근접 스킬: 2/3 이동 -> 내 위치 생성 이펙트가 상대 위치로 이동/삭제 -> 복귀
-    /// </summary>
+    // 근접 스킬: 2/3 이동 -> 내 위치 생성 이펙트가 상대 위치로 이동/삭제 -> 복귀
     public IEnumerator MeleeSkillSequence(PokemonInfo otherInfo, int skillIndex)
     {
         if (image == null) { yield break; }
@@ -161,21 +151,15 @@ public class PokemonInfo : MonoBehaviour
         ApplyOffenseSprite();
 
         GameObject prefab = null;
-        if (SkillType.instance != null)
-        {
-            // @ behaviours 전달(컴파일 에러 CS7036 방지)
-            prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours);
-        }
+        // behaviours 전달(에러 CS7036 방지용)
+        if (SkillType.instance != null) { prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours); }
         yield return StartCoroutine(SpawnMoveAndDestroyFx(prefab, startPos, targetPos, 0.25f));
 
         yield return StartCoroutine(MoveImageTo(startPos));
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-
-    /// <summary>
-    /// @ 원거리 스킬: 내 위치에서 생성 -> 상대 위치까지 이동 -> 삭제
-    /// </summary>
+    // 원거리 스킬: 내 위치에서 생성 -> 상대 위치까지 이동 -> 삭제
     public IEnumerator RangedSkillSequence(PokemonInfo otherInfo, int skillIndex)
     {
         if (image == null) { yield break; }
@@ -188,61 +172,43 @@ public class PokemonInfo : MonoBehaviour
         ApplyOffenseSprite();
 
         GameObject prefab = null;
-        if (SkillType.instance != null)
-        {
-            // @ behaviours 전달(컴파일 에러 CS7036 방지)
-            prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours);
-        }
+        if (SkillType.instance != null) { prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours); }
         yield return StartCoroutine(SpawnMoveAndDestroyFx(prefab, startPos, targetPos, 0.25f));
 
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-
-    /// <summary>
-    /// @ 회복 스킬: 내 위치에서 1회 생성 -> 잠시 후 삭제
-    /// </summary>
+    // 회복 스킬: 내 위치에서 1회 생성 -> 잠시 후 삭제
     public IEnumerator HealSkillSequence(int skillIndex)
     {
         if (image == null) { yield break; }
         if (targetPokemon == null) { yield break; }
 
         GameObject prefab = null;
-        if (SkillType.instance != null)
-        {
-            // @ behaviours 전달(컴파일 에러 CS7036 방지)
-            prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours);
-        }
+        if (SkillType.instance != null) { prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours); }
         SpawnOneShotFxAt(prefab, image.transform.position);
         yield return new WaitForSeconds(0.35f);
         ApplySpriteFromAtlas();
         ApplyBattleIdlePose();
     }
-
-    /// <summary>
-    /// @ 방어 스킬: 내 위치에서 1회 생성 -> 잠시 후 삭제
-    /// </summary>
+    // 방어 스킬: 내 위치에서 1회 생성 -> 잠시 후 삭제
     public IEnumerator DefenseSkillSequence(int skillIndex)
     {
         if (image == null) { yield break; }
         if (targetPokemon == null) { yield break; }
 
         GameObject prefab = null;
-        if (SkillType.instance != null)
-        {
-            // @ behaviours 전달(컴파일 에러 CS7036 방지)
-            prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours);
-        }
+        if (SkillType.instance != null) { prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours); }
         SpawnOneShotFxAt(prefab, image.transform.position);
         yield return new WaitForSeconds(0.35f);
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
 
-    // ======================================================================
-    // @ 이동/이펙트 유틸
-    // ======================================================================
-
+    /// <summary>
+    /// 이동/이펙트 유틸
+    /// </summary>
+    // '이미지'오브젝트 이동
     private IEnumerator MoveImageTo(Vector3 targetPos)
     {
         if (_isMoving) { yield break; }
@@ -259,14 +225,14 @@ public class PokemonInfo : MonoBehaviour
 
         _isMoving = false;
     }
-
+    // '공격'타입 스킬 이펙트 생성
     private void SpawnOneShotFxAt(GameObject fxPrefab, Vector3 pos)
     {
         if (fxPrefab == null) { return; }
         GameObject go = GameObject.Instantiate(fxPrefab, pos, Quaternion.identity);
         GameObject.Destroy(go, 1.2f);
     }
-
+    // '공격'타입 스킬 이펙트 이동 및 삭제
     private IEnumerator SpawnMoveAndDestroyFx(GameObject fxPrefab, Vector3 startPos, Vector3 endPos, float lifeAfterArrive)
     {
         if (fxPrefab == null) { yield break; }

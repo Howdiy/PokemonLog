@@ -167,28 +167,19 @@ public static class SkillTypeExtensions
 {
     public static GameObject GetSkillFx(this SkillType reg, Pokemon.PokemonIndex index, SkillTypeBase behaviour)
     {
-        if (reg == null)
-        {
-            return null;
-        }
+        if (reg == null)    { return null; }
         return reg.GetSkillFxByType(index, behaviour);
     }
 
     public static GameObject GetSkillFx(this SkillType reg, Pokemon.PokemonIndex index, int skillIndex, SkillTypeBase[] behaviours)
     {
-        if (reg == null)
-        {
-            return null;
-        }
+        if (reg == null)    { return null; }
         return reg.GetSkillFx(index, skillIndex, behaviours);
     }
 
     public static GameObject GetNormalAttackFx(this SkillType reg)
     {
-        if (reg == null)
-        {
-            return null;
-        }
+        if (reg == null)    { return null; }
         return reg.GetNormalAttackFx();
     }
 }

@@ -28,25 +28,37 @@ public class PokemonGamemanager : MonoBehaviour
 
     // 'Setting'Prefab 연결 필드
     [Header("Setting Prefab Link")]
-    [SerializeField] private GameObject settingsPrefab;   // 프리팹
-    [SerializeField] private Transform uiRoot;            // 프리팹의 부모 위치지정
-    private GameObject _settingsInst;                     // 런타임중 인스턴스
-    private Setting _settingsRef;                         // Component Ref
+    [SerializeField]
+    private GameObject settingsPrefab;  // 프리팹
+    [SerializeField]
+    private Transform uiRoot;           // 프리팹의 부모 위치지정
+    
+    private GameObject _settingsInst;   // 런타임중 인스턴스
+    private Setting _settingsRef;       // Component Ref
 
     // PokemonStart씬의 연결할 필드
     [Header("Start Scene UI")]
-    [SerializeField] private Button startBt;
-    [SerializeField] private Button continueBt;
-    [SerializeField] private Button exitBt;
+    [SerializeField]
+    private Button startBt;
+    [SerializeField]
+    private Button continueBt;
+    [SerializeField]
+    private Button exitBt;
 
     // PokemonChoices씬의 연결할 필드
     [Header("Choices Scene UI")]
-    [SerializeField] private TextMeshProUGUI titleText;
-    [SerializeField] private Button goBattleBt;  // @ Only This One
-    [SerializeField] private Button pika;
-    [SerializeField] private Button paily;
-    [SerializeField] private Button goBook;
-    [SerializeField] private Button eSang;
+    [SerializeField]
+    private TextMeshProUGUI titleText;
+    [SerializeField]
+    private Button goBattleBt;    
+    [SerializeField]
+    private Button pika;
+    [SerializeField]
+    private Button paily;
+    [SerializeField]
+    private Button goBook;
+    [SerializeField]
+    private Button eSang;
 
     // 팀의 역할을 할 리스트 할당
     public static List<Pokemon> PlayerTeam = new List<Pokemon>(3);

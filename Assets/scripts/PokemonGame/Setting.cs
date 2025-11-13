@@ -37,12 +37,7 @@ public class Setting : MonoBehaviour
         if (settingsButton != null)
         {
             if (settingsPanel != null)
-            {
-                if (settingsPanel.activeSelf)
-                {
-                    settingsPanel.SetActive(false);
-                }
-            }
+            {   if (settingsPanel.activeSelf)   { settingsPanel.SetActive(false); }   }
 
             Button b = settingsButton.GetComponent<Button>();
             if (b != null)
@@ -129,24 +124,12 @@ public class Setting : MonoBehaviour
             settingsPanel.SetActive(true);
 
             // 자식 버튼들도 보장, 비활성화였다면 활성화
-            if (settingsRestartBtn != null)
-            {
-                settingsRestartBtn.gameObject.SetActive(true);
-            }
-            if (settingsResumeBtn != null)
-            {
-                settingsResumeBtn.gameObject.SetActive(true);
-            }
-            if (settingsExitBtn != null)
-            {
-                settingsExitBtn.gameObject.SetActive(true);
-            }
+            if (settingsRestartBtn != null) { settingsRestartBtn.gameObject.SetActive(true); }
+            if (settingsResumeBtn != null)  { settingsResumeBtn.gameObject.SetActive(true); }
+            if (settingsExitBtn != null)    { settingsExitBtn.gameObject.SetActive(true); }
         }
-        else
-        {
-            // 패널만 비활성화, 다른 오브젝트는 건드리지 않음
-            settingsPanel.SetActive(false);
-        }
+        // 패널만 비활성화, 다른 오브젝트는 건드리지 않음
+        else  { settingsPanel.SetActive(false); }
     }
 
     void CacheAndHideChildren(Transform root, GameObject ignore)
@@ -175,12 +158,7 @@ public class Setting : MonoBehaviour
     void RevealHidden()
     {
         for (int i = 0; i < _hiddenBySettings.Count; i++)
-        {
-            if (_hiddenBySettings[i] != null)
-            {
-                _hiddenBySettings[i].SetActive(true);
-            }
-        }
+        {   if (_hiddenBySettings[i] != null) { _hiddenBySettings[i].SetActive(true); }   }
         _hiddenBySettings.Clear();
     }
 
@@ -198,19 +176,14 @@ public class Setting : MonoBehaviour
         return t.IsChildOf(parent);
     }
     /// <summary>
-    /// 런타임: uiRoot가 비어 있을 때만 씬의 Canvas(또는 힌트)로 지정
+    /// 런타임시 '설정'프리팹 생성 및 세팅
     /// </summary>
+    //uiRoot가 비어 있을 때만 씬의 Canvas(또는 힌트)로 지정
     public void EnsureUiRootAtRuntime(Transform root)
     {
-        if (uiRoot == null)
-        {
-            uiRoot = root;
-        }
+        if (uiRoot == null) { uiRoot = root; }
     }
-
-    /// <summary>
-    /// 런타임: 설정 패널을 화면 중앙(0,0,0)으로 강제 배치
-    /// </summary>
+    //설정 패널을 화면 중앙(0,0,0)으로 강제 배치
     public void CenterPanelAtRuntime()
     {
         if (settingsPanel != null)
