@@ -9,14 +9,18 @@ public static class BattleFxAndBuffExtensions
     /// </summary>
     public static void ApplyDefenseBuff(this PokemonBattleManager bm, Pokemon target, int amount, int durationTurns)
     {
-        if (bm == null) { return; }
+        PokemonBattleManager manager = bm ?? PokemonBattleManager.instance;
+        if (manager == null) { return; }
         if (target == null) { return; }
+        if (amount <= 0) { return; }
+        if (durationTurns < 1) { durationTurns = 1; }
 
         // PokemonBattleManager 내부 런타임 상태에 버프를 등록하고 수치를 반영한다.
-        bm.ApplyDefenseBuffRuntime(target, amount, durationTurns);
+        manager.ApplyDefenseBuffRuntime(target, amount, durationTurns);
 
         // 텍스트 로그는 배틀 매니저의 공용 메서드를 통해 출력한다.
-        bm.WriteBattleLog(target.name + "의 방어가 " + amount.ToString() + " 상승하였다.");
+        string targetName = string.IsNullOrEmpty(target.name) ? "???" : target.name;
+        manager.WriteBattleLog(targetName + "의 방어가 " + amount.ToString() + " 상승하였다.");
     }
 
     /// <summary>
