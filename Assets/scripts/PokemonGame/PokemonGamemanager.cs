@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using TMPro;
@@ -8,15 +8,15 @@ using UnityEngine.UI;
 
 public class PokemonGamemanager : MonoBehaviour
 {
-    // ì”¬ì˜ ì¸í…ìŠ¤
+    // ¾ÀÀÇ ÀÎÅØ½º
     public const int SCENE_INDEX_PokemonStart = 0;
     public const int SCENE_INDEX_PokemonBattle = 1;
     public const int SCENE_INDEX_PokemonChoices = 2;
 
-    // ì €ì¥ í‚¤ê°’
+    // ÀúÀå Å°°ª
     private const string SAVE_FLAG_KEY = "POKEMON_SAVE_FLAG_V1";
 
-    // ì €ì¥ ë²¨ë¥˜
+    // ÀúÀå º§·ù
     private static string SavePath
     {
         get
@@ -26,17 +26,17 @@ public class PokemonGamemanager : MonoBehaviour
         }
     }
 
-    // 'Setting'Prefab ì—°ê²° í•„ë“œ
+    // 'Setting'Prefab ¿¬°á ÇÊµå
     [Header("Setting Prefab Link")]
     [SerializeField]
-    private GameObject settingsPrefab;  // í”„ë¦¬íŒ¹
+    private GameObject settingsPrefab;  // ÇÁ¸®ÆÕ
     [SerializeField]
-    private Transform uiRoot;           // í”„ë¦¬íŒ¹ì˜ ë¶€ëª¨ ìœ„ì¹˜ì§€ì •
+    private Transform uiRoot;           // ÇÁ¸®ÆÕÀÇ ºÎ¸ğ À§Ä¡ÁöÁ¤
     
-    private GameObject _settingsInst;   // ëŸ°íƒ€ì„ì¤‘ ì¸ìŠ¤í„´ìŠ¤
+    private GameObject _settingsInst;   // ·±Å¸ÀÓÁß ÀÎ½ºÅÏ½º
     private Setting _settingsRef;       // Component Ref
 
-    // PokemonStartì”¬ì˜ ì—°ê²°í•  í•„ë“œ
+    // PokemonStart¾ÀÀÇ ¿¬°áÇÒ ÇÊµå
     [Header("Start Scene UI")]
     [SerializeField]
     private Button startBt;
@@ -45,7 +45,7 @@ public class PokemonGamemanager : MonoBehaviour
     [SerializeField]
     private Button exitBt;
 
-    // PokemonChoicesì”¬ì˜ ì—°ê²°í•  í•„ë“œ
+    // PokemonChoices¾ÀÀÇ ¿¬°áÇÒ ÇÊµå
     [Header("Choices Scene UI")]
     [SerializeField]
     private TextMeshProUGUI titleText;
@@ -60,14 +60,14 @@ public class PokemonGamemanager : MonoBehaviour
     [SerializeField]
     private Button eSang;
 
-    // íŒ€ì˜ ì—­í• ì„ í•  ë¦¬ìŠ¤íŠ¸ í• ë‹¹
+    // ÆÀÀÇ ¿ªÇÒÀ» ÇÒ ¸®½ºÆ® ÇÒ´ç
     public static List<Pokemon> PlayerTeam = new List<Pokemon>(3);
     public static List<Pokemon> EnemyTeam = new List<Pokemon>(3);
 
-    // ì ì˜ íŒ€ êµ¬ì„±ì™„ë£Œ ìƒíƒœ í™•ì¸ìš©
+    // ÀûÀÇ ÆÀ ±¸¼º¿Ï·á »óÅÂ È®ÀÎ¿ë
     private static bool _enemyBuiltOnce = false;
 
-    // íŒ€ì˜ í¬ì¼“ëª¬ ì €ì¥
+    // ÆÀÀÇ Æ÷ÄÏ¸ó ÀúÀå
     [Serializable]
     private class SaveDTO
     {
@@ -76,10 +76,10 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// ëŸ°íƒ€ì„ ì‚¬ì „ ì„¸íŒ…
+    /// ·±Å¸ÀÓ »çÀü ¼¼ÆÃ
     /// </summary>
     private void Awake()
-    {   // ì„¤ì •í”„ë¦¬íŒ¹ ìƒì„±
+    {   // ¼³Á¤ÇÁ¸®ÆÕ »ı¼º
         EnsureSettingsInstanceOrBind();
     }
 
@@ -102,11 +102,11 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// ì„¤ì •í”„ë¦¬íŒ¹ ì¸ìŠ¤í„´íŠ¸í™” ì™€ ë°”ì¸ë”© ì„¤ì •
+    /// ¼³Á¤ÇÁ¸®ÆÕ ÀÎ½ºÅÏÆ®È­ ¿Í ¹ÙÀÎµù ¼³Á¤
     /// </summary>
     private void EnsureSettingsInstanceOrBind()
     {
-        // í˜„ì¬ì”¬ ì¸ìŠ¤í„´ìŠ¤í™” ì‹œë„
+        // ÇöÀç¾À ÀÎ½ºÅÏ½ºÈ­ ½Ãµµ
         Setting exists = GameObject.FindObjectOfType<Setting>();
         if (exists != null)
         {
@@ -114,7 +114,7 @@ public class PokemonGamemanager : MonoBehaviour
             return;
         }
 
-        // í”„ë¦¬íŒ¹ì´ ì—†ëŠ” ê²½ìš° ì”¬ì—ì„œ ì¸ìŠ¤í„´íŠ¸í™”í•˜ê¸°
+        // ÇÁ¸®ÆÕÀÌ ¾ø´Â °æ¿ì ¾À¿¡¼­ ÀÎ½ºÅÏÆ®È­ÇÏ±â
         if (_settingsRef == null)
         {
             if (settingsPrefab != null)
@@ -139,7 +139,7 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// PokemonStartì”¬ì—ì„œ ì‚¬ìš©
+    /// PokemonStart¾À¿¡¼­ »ç¿ë
     /// </summary>
     private void InitStartScene()
     {
@@ -172,15 +172,15 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// PokemonChoicesì”¬ì—ì„œ ì‚¬ìš©
+    /// PokemonChoices¾À¿¡¼­ »ç¿ë
     /// </summary>
     private void InitChoicesScene()
     {
-        // í”Œë ˆì´ì–´ íŒ€ì˜ ì´ˆê¸°í™”
+        // ÇÃ·¹ÀÌ¾î ÆÀÀÇ ÃÊ±âÈ­
         if (PlayerTeam == null) { PlayerTeam = new List<Pokemon>(3); }
         PlayerTeam.Clear();
 
-        // ì  íŒ€ì˜ ì´ˆê¸°í™”
+        // Àû ÆÀÀÇ ÃÊ±âÈ­
         if (!_enemyBuiltOnce)
         {
             EnemyTeam = BuildRandomEnemyTeam3();
@@ -192,7 +192,7 @@ public class PokemonGamemanager : MonoBehaviour
         WireButton(goBook, OnClickGoBook);
         WireButton(eSang, OnClickEsang);
 
-        // goBattleë²„íŠ¼ ë¹„í™œì„±í™” 
+        // goBattle¹öÆ° ºñÈ°¼ºÈ­ 
         if (goBattleBt != null)
         {
             goBattleBt.onClick.RemoveAllListeners();
@@ -202,7 +202,7 @@ public class PokemonGamemanager : MonoBehaviour
 
         if (titleText != null)
         {
-            titleText.text = "í¬ì¼“ëª¬ ì„ íƒ ì‹œì‘";
+            titleText.text = "Æ÷ÄÏ¸ó ¼±ÅÃ ½ÃÀÛ";
         }
     }
 
@@ -213,23 +213,23 @@ public class PokemonGamemanager : MonoBehaviour
         bt.onClick.AddListener(action);
     }
 
-    // í¬ì¼“ëª¬ ì„ íƒë²„íŠ¼ 
+    // Æ÷ÄÏ¸ó ¼±ÅÃ¹öÆ° 
     private void OnClickPika() { OnPokemonClick(0); }
     private void OnClickPaily() { OnPokemonClick(1); }
     private void OnClickGoBook() { OnPokemonClick(2); }
     private void OnClickEsang() { OnPokemonClick(3); }
 
     /// <summary>
-    /// í”Œë ˆì´ì–´ì˜ íŒ€ êµ¬ì„± ê´€ë ¨
+    /// ÇÃ·¹ÀÌ¾îÀÇ ÆÀ ±¸¼º °ü·Ã
     /// </summary>
     public void OnPokemonClick(int index)
     {
         if (PlayerTeam == null) { PlayerTeam = new List<Pokemon>(3); }
-        // í”Œë ˆì´ì–´ íŒ€ì— 3ë§ˆë¦¬ê°€ ìˆëŠ”ì§€ í™•ì¸ìš©
+        // ÇÃ·¹ÀÌ¾î ÆÀ¿¡ 3¸¶¸®°¡ ÀÖ´ÂÁö È®ÀÎ¿ë
         int canAdd = (PlayerTeam.Count < 3) ? 1 : 0;
         if (canAdd == 0)
         {
-            if (titleText != null)  { titleText.text = "3 ë§ˆë¦¬ ì„ íƒ ì™„ë£Œ"; }
+            if (titleText != null)  { titleText.text = "3 ¸¶¸® ¼±ÅÃ ¿Ï·á"; }
             return;
         }
 
@@ -239,21 +239,21 @@ public class PokemonGamemanager : MonoBehaviour
         if (titleText != null)
         {
             int c = PlayerTeam.Count;
-            titleText.text = p.name + " ì„ íƒ " + c.ToString() + " / 3";
+            titleText.text = p.name + " ¼±ÅÃ " + c.ToString() + " / 3";
         }
 
         int isFull = (PlayerTeam.Count == 3) ? 1 : 0;
         if (isFull == 1)
         {
             if (goBattleBt != null) { goBattleBt.gameObject.SetActive(true); }
-            if (titleText != null)  { titleText.text = "ì „íˆ¬ ì‹œì‘ ì¤€ë¹„ ì™„ë£Œ"; }
+            if (titleText != null)  { titleText.text = "ÀüÅõ ½ÃÀÛ ÁØºñ ¿Ï·á"; }
         }
     }
 
-    // goBattleë²„íŠ¼ í™œì„±í™” ì¡°ê±´
+    // goBattle¹öÆ° È°¼ºÈ­ Á¶°Ç
     private void OnGbtClick()
     {
-        // í”Œë ˆì´ì–´ì™€ ì  ëª¨ë‘ íŒ€ì— í¬ì¼“ëª¬ 3ë§ˆë¦¬ê°€ ì¡´ì¬í•´ì•¼ í™œì„±í™”ë¨
+        // ÇÃ·¹ÀÌ¾î¿Í Àû ¸ğµÎ ÆÀ¿¡ Æ÷ÄÏ¸ó 3¸¶¸®°¡ Á¸ÀçÇØ¾ß È°¼ºÈ­µÊ
         int okPlayer = (PlayerTeam != null) ? PlayerTeam.Count : 0;
         int okEnemy = (EnemyTeam != null) ? EnemyTeam.Count : 0;
 
@@ -268,11 +268,11 @@ public class PokemonGamemanager : MonoBehaviour
             }
         }
 
-        if (titleText != null)  { titleText.text = "íŒ€ ì¤€ë¹„ê°€ ë¶€ì¡±í•©ë‹ˆë‹¤"; }
+        if (titleText != null)  { titleText.text = "ÆÀ ÁØºñ°¡ ºÎÁ·ÇÕ´Ï´Ù"; }
     }
 
     /// <summary>
-    /// PokemonStartì”¬ ê´€ë ¨
+    /// PokemonStart¾À °ü·Ã
     /// </summary>
     private void OnClickStart()
     {
@@ -303,7 +303,7 @@ public class PokemonGamemanager : MonoBehaviour
             }
         }
 
-        if (titleText != null)  { titleText.text = "ì €ì¥ ë°ì´í„°ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ"; }
+        if (titleText != null)  { titleText.text = "ÀúÀå µ¥ÀÌÅÍ¸¦ Ã£À» ¼ö ¾øÀ½"; }
     }
 
     private void OnClickExit()
@@ -312,7 +312,7 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// ì„ íƒí•œ í¬ì¼“ëª¬ìœ¼ë¡œ íŒ€ ìƒì„±
+    /// ¼±ÅÃÇÑ Æ÷ÄÏ¸óÀ¸·Î ÆÀ »ı¼º
     /// </summary>
     private static List<Pokemon> BuildRandomEnemyTeam3()
     {
@@ -356,7 +356,7 @@ public class PokemonGamemanager : MonoBehaviour
     }
 
     /// <summary>
-    /// ì €ì¥ ë° ë¶ˆëŸ¬ì˜¤ê¸°
+    /// ÀúÀå ¹× ºÒ·¯¿À±â
     /// </summary>
     private void MarkSaveFlag()
     {
@@ -406,7 +406,7 @@ public class PokemonGamemanager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log("ì„¸ì´ë¸ŒíŒŒì¼ ì €ì¥ ì‹¤íŒ¨");
+            Debug.Log("¼¼ÀÌºêÆÄÀÏ ÀúÀå ½ÇÆĞ");
             Debug.Log(e.Message);
         }
     }
@@ -444,16 +444,16 @@ public class PokemonGamemanager : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log("ì„¸ì´ë¸ŒíŒŒì¼ ë¡œë“œ ì‹¤íŒ¨");
+            Debug.Log("¼¼ÀÌºêÆÄÀÏ ·Îµå ½ÇÆĞ");
             Debug.Log(e.Message);
             return false;
         }
     }
 
     /// <summary>
-    /// ê³µë™ ìœ í‹¸ íŒŒíŠ¸ 
+    /// °øµ¿ À¯Æ¿ ÆÄÆ® 
     /// </summary>
-    // ì €ì¥ëœ ì²«ë²ˆì§¸ í¬ì¼“ëª¬ì˜ ì¸ë±ìŠ¤ ë°˜í™˜. ì—†ìœ¼ë©´ -1
+    // ÀúÀåµÈ Ã¹¹øÂ° Æ÷ÄÏ¸óÀÇ ÀÎµ¦½º ¹İÈ¯. ¾øÀ¸¸é -1
     public static int FirstAliveIndex(List<Pokemon> team)
     {
         if (team == null) { return -1; }
@@ -472,7 +472,7 @@ public class PokemonGamemanager : MonoBehaviour
         }
         return -1;
     }
-    // ì‚¬ìš© ê°€ëŠ¥í•œ í¬ì¼“ëª¬ ì„ íƒ
+    // »ç¿ë °¡´ÉÇÑ Æ÷ÄÏ¸ó ¼±ÅÃ
     public static Pokemon SelectAvailablePokemon(bool preferFirst, bool allowZeroHp)
     {
         if (PlayerTeam == null) { return null; }
@@ -498,7 +498,7 @@ public class PokemonGamemanager : MonoBehaviour
         return null;
     }
 
-    // í”„ë¡œê·¸ë¨ ì¢…ë£Œì‹œ ìë™ì €ì¥
+    // ÇÁ·Î±×·¥ Á¾·á½Ã ÀÚµ¿ÀúÀå
     private void OnApplicationQuit()
     {
         if (PlayerTeam != null)

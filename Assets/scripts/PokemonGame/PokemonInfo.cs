@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// ìŠ¤í”„ë¼ì´íŠ¸/ì´ë¦„/HP UI ë°”ì¸ë”© + ê³µê²©/ìŠ¤í‚¬ ì—°ì¶œ(ì´í™íŠ¸ ìƒì„±, ì´ë™, ì‚­ì œ)
-/// ì‹¤ì œ ëŒ€ë¯¸ì§€ ê³„ì‚°ì€ Pokemon.Attack()ì—ì„œ ì²˜ë¦¬
+/// ½ºÇÁ¶óÀÌÆ®/ÀÌ¸§/HP UI ¹ÙÀÎµù + °ø°İ/½ºÅ³ ¿¬Ãâ(ÀÌÆåÆ® »ı¼º, ÀÌµ¿, »èÁ¦)
+/// ½ÇÁ¦ ´ë¹ÌÁö °è»êÀº Pokemon.Attack()¿¡¼­ Ã³¸®
 /// </summary>
 public class PokemonInfo : MonoBehaviour
 {
@@ -23,7 +23,7 @@ public class PokemonInfo : MonoBehaviour
     private bool _isMoving = false;
 
     /// <summary>
-    /// í¬ì¼“ëª¬ ë°ì´í„° ì—°ê²° ë° ê¸°ë³¸ UI ê°±ì‹ 
+    /// Æ÷ÄÏ¸ó µ¥ÀÌÅÍ ¿¬°á ¹× ±âº» UI °»½Å
     /// </summary>
     public void Bind(Pokemon p)
     {
@@ -46,7 +46,7 @@ public class PokemonInfo : MonoBehaviour
     }
 
     /// <summary>
-    /// ì „íˆ¬ ëŒ€ê¸° í¬ì¦ˆ
+    /// ÀüÅõ ´ë±â Æ÷Áî
     /// </summary>
     public void ApplyBattleIdlePose()
     {
@@ -55,7 +55,7 @@ public class PokemonInfo : MonoBehaviour
     }
 
     /// <summary>
-    /// @ ê³µê²© í¬ì¦ˆ(ê°„ë‹¨ ìŠ¤ì¼€ì¼ ì—…)
+    /// @ °ø°İ Æ÷Áî(°£´Ü ½ºÄÉÀÏ ¾÷)
     /// </summary>
     public void ApplyAttackPose()
     {
@@ -64,7 +64,7 @@ public class PokemonInfo : MonoBehaviour
     }
 
     /// <summary>
-    /// @ ì•„í‹€ë¼ìŠ¤ì—ì„œ ì „íˆ¬ ëŒ€ê¸° ìŠ¤í”„ë¼ì´íŠ¸ ì ìš©
+    /// @ ¾ÆÆ²¶ó½º¿¡¼­ ÀüÅõ ´ë±â ½ºÇÁ¶óÀÌÆ® Àû¿ë
     /// </summary>
     public void ApplySpriteFromAtlas()
     {
@@ -84,7 +84,7 @@ public class PokemonInfo : MonoBehaviour
         return "";
     }
 
-    /// <summary>  ëŒ€ê¸°/ìƒì /íšŒë³µ/ë°©ì–´ìš© ì•„í‹€ë¼ìŠ¤ í‚¤: ì =...1, í”Œë ˆì´ì–´=...2 </summary>
+    /// <summary>  ´ë±â/»óÁ¡/È¸º¹/¹æ¾î¿ë ¾ÆÆ²¶ó½º Å°: Àû=...1, ÇÃ·¹ÀÌ¾î=...2 </summary>
     private string ResolveBattleIdleKey()
     {
         string p = ResolvePrefix();
@@ -92,7 +92,7 @@ public class PokemonInfo : MonoBehaviour
         return isPlayerSide ? (p + "2") : (p + "1");
     }
 
-    /// <summary> ê·¼ì ‘/ì›ê±°ë¦¬/ê³µê²©ìš© ì•„í‹€ë¼ìŠ¤ í‚¤: ì =...3, í”Œë ˆì´ì–´=...4 </summary>
+    /// <summary> ±ÙÁ¢/¿ø°Å¸®/°ø°İ¿ë ¾ÆÆ²¶ó½º Å°: Àû=...3, ÇÃ·¹ÀÌ¾î=...4 </summary>
     private string ResolveOffenseKey()
     {
         string p = ResolvePrefix();
@@ -111,9 +111,9 @@ public class PokemonInfo : MonoBehaviour
     }
     
     /// <summary>
-    /// ê³µê²© ì´í™íŠ¸ ì‹œí€€ìŠ¤(ì´í™íŠ¸ëŠ” SkillType ë ˆì§€ìŠ¤íŠ¸ë¦¬ì—ì„œ ê°€ì ¸ì˜´)
+    /// °ø°İ ÀÌÆåÆ® ½ÃÄö½º(ÀÌÆåÆ®´Â SkillType ·¹Áö½ºÆ®¸®¿¡¼­ °¡Á®¿È)
     /// </summary>
-    // ì¼ë°˜ê³µê²©: 2/3 ì§€ì ê¹Œì§€ ì´ë™ -> í”¼ê²© ìœ„ì¹˜ì—ì„œ ê³µìš© ì´í™íŠ¸ 1íšŒ -> ì›ìœ„ì¹˜ ë³µê·€
+    // ÀÏ¹İ°ø°İ: 2/3 ÁöÁ¡±îÁö ÀÌµ¿ -> ÇÇ°İ À§Ä¡¿¡¼­ °ø¿ë ÀÌÆåÆ® 1È¸ -> ¿øÀ§Ä¡ º¹±Í
     public IEnumerator NormalAttackSequence(PokemonInfo otherInfo)
     {
         if (image == null) { yield break; }
@@ -135,7 +135,7 @@ public class PokemonInfo : MonoBehaviour
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-    // ê·¼ì ‘ ìŠ¤í‚¬: 2/3 ì´ë™ -> ë‚´ ìœ„ì¹˜ ìƒì„± ì´í™íŠ¸ê°€ ìƒëŒ€ ìœ„ì¹˜ë¡œ ì´ë™/ì‚­ì œ -> ë³µê·€
+    // ±ÙÁ¢ ½ºÅ³: 2/3 ÀÌµ¿ -> ³» À§Ä¡ »ı¼º ÀÌÆåÆ®°¡ »ó´ë À§Ä¡·Î ÀÌµ¿/»èÁ¦ -> º¹±Í
     public IEnumerator MeleeSkillSequence(PokemonInfo otherInfo, int skillIndex)
     {
         if (image == null) { yield break; }
@@ -151,7 +151,7 @@ public class PokemonInfo : MonoBehaviour
         ApplyOffenseSprite();
 
         GameObject prefab = null;
-        // behaviours ì „ë‹¬(ì—ëŸ¬ CS7036 ë°©ì§€ìš©)
+        // behaviours Àü´Ş(¿¡·¯ CS7036 ¹æÁö¿ë)
         if (SkillType.instance != null) { prefab = SkillType.instance.GetSkillFx(targetPokemon.index, skillIndex, targetPokemon.skillTypeBehaviours); }
         yield return StartCoroutine(SpawnMoveAndDestroyFx(prefab, startPos, targetPos, 0.25f));
 
@@ -159,7 +159,7 @@ public class PokemonInfo : MonoBehaviour
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-    // ì›ê±°ë¦¬ ìŠ¤í‚¬: ë‚´ ìœ„ì¹˜ì—ì„œ ìƒì„± -> ìƒëŒ€ ìœ„ì¹˜ê¹Œì§€ ì´ë™ -> ì‚­ì œ
+    // ¿ø°Å¸® ½ºÅ³: ³» À§Ä¡¿¡¼­ »ı¼º -> »ó´ë À§Ä¡±îÁö ÀÌµ¿ -> »èÁ¦
     public IEnumerator RangedSkillSequence(PokemonInfo otherInfo, int skillIndex)
     {
         if (image == null) { yield break; }
@@ -178,7 +178,7 @@ public class PokemonInfo : MonoBehaviour
         ApplyBattleIdlePose();
         ApplySpriteFromAtlas();
     }
-    // íšŒë³µ ìŠ¤í‚¬: ë‚´ ìœ„ì¹˜ì—ì„œ 1íšŒ ìƒì„± -> ì ì‹œ í›„ ì‚­ì œ
+    // È¸º¹ ½ºÅ³: ³» À§Ä¡¿¡¼­ 1È¸ »ı¼º -> Àá½Ã ÈÄ »èÁ¦
     public IEnumerator HealSkillSequence(int skillIndex)
     {
         if (image == null) { yield break; }
@@ -191,7 +191,7 @@ public class PokemonInfo : MonoBehaviour
         ApplySpriteFromAtlas();
         ApplyBattleIdlePose();
     }
-    // ë°©ì–´ ìŠ¤í‚¬: ë‚´ ìœ„ì¹˜ì—ì„œ 1íšŒ ìƒì„± -> ì ì‹œ í›„ ì‚­ì œ
+    // ¹æ¾î ½ºÅ³: ³» À§Ä¡¿¡¼­ 1È¸ »ı¼º -> Àá½Ã ÈÄ »èÁ¦
     public IEnumerator DefenseSkillSequence(int skillIndex)
     {
         if (image == null) { yield break; }
@@ -206,9 +206,9 @@ public class PokemonInfo : MonoBehaviour
     }
 
     /// <summary>
-    /// ì´ë™/ì´í™íŠ¸ ìœ í‹¸
+    /// ÀÌµ¿/ÀÌÆåÆ® À¯Æ¿
     /// </summary>
-    // 'ì´ë¯¸ì§€'ì˜¤ë¸Œì íŠ¸ ì´ë™
+    // 'ÀÌ¹ÌÁö'¿ÀºêÁ§Æ® ÀÌµ¿
     private IEnumerator MoveImageTo(Vector3 targetPos)
     {
         if (_isMoving) { yield break; }
@@ -225,14 +225,14 @@ public class PokemonInfo : MonoBehaviour
 
         _isMoving = false;
     }
-    // 'ê³µê²©'íƒ€ì… ìŠ¤í‚¬ ì´í™íŠ¸ ìƒì„±
+    // '°ø°İ'Å¸ÀÔ ½ºÅ³ ÀÌÆåÆ® »ı¼º
     private void SpawnOneShotFxAt(GameObject fxPrefab, Vector3 pos)
     {
         if (fxPrefab == null) { return; }
         GameObject go = GameObject.Instantiate(fxPrefab, pos, Quaternion.identity);
         GameObject.Destroy(go, 1.2f);
     }
-    // 'ê³µê²©'íƒ€ì… ìŠ¤í‚¬ ì´í™íŠ¸ ì´ë™ ë° ì‚­ì œ
+    // '°ø°İ'Å¸ÀÔ ½ºÅ³ ÀÌÆåÆ® ÀÌµ¿ ¹× »èÁ¦
     private IEnumerator SpawnMoveAndDestroyFx(GameObject fxPrefab, Vector3 startPos, Vector3 endPos, float lifeAfterArrive)
     {
         if (fxPrefab == null) { yield break; }

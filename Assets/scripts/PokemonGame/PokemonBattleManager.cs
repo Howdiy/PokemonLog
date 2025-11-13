@@ -7,26 +7,26 @@ using UnityEngine.UI;
 
 /// <summary>
 /// @ PokemonBattleManager
-/// @ ì”¬ ì¸ë±ìŠ¤: Start=0, Battle=1, Choices=2
-/// @ PlayerTeam/EnemyTeamëŠ” PokemonGamemanagerì˜ ì •ì  ë¦¬ìŠ¤íŠ¸ ì‚¬ìš©
-/// @ ì»¤ë§¨ë“œ 4ë²„íŠ¼ SetActive()ë¡œ ë³´ì„/ìˆ¨ê¹€
-/// @ ìŠ¤í‚¬ 1~4 ë²„íŠ¼ í…ìŠ¤íŠ¸ë¥¼ í˜„ì¬ í”Œë ˆì´ì–´ í¬ì¼“ëª¬ì˜ skillNamesë¡œ ë°˜ì˜
-/// @ êµì²´ UI 2ìŠ¬ë¡¯(í”Œë ˆì´ì–´ ì „ìš©), ì ì€ UI ì—†ì´ ì½”ë“œë¡œë§Œ í–‰ë™
-/// @ Setting í”„ë¦¬íŒ¹: ì”¬ ì¸ìŠ¤í„´ìŠ¤ ì°¸ì¡° ë˜ëŠ” ì—ì…‹ë§Œ ì—°ê²°í•´ë„ ìë™ Instantiate
+/// @ ¾À ÀÎµ¦½º: Start=0, Battle=1, Choices=2
+/// @ PlayerTeam/EnemyTeam´Â PokemonGamemanagerÀÇ Á¤Àû ¸®½ºÆ® »ç¿ë
+/// @ Ä¿¸Çµå 4¹öÆ° SetActive()·Î º¸ÀÓ/¼û±è
+/// @ ½ºÅ³ 1~4 ¹öÆ° ÅØ½ºÆ®¸¦ ÇöÀç ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸óÀÇ skillNames·Î ¹İ¿µ
+/// @ ±³Ã¼ UI 2½½·Ô(ÇÃ·¹ÀÌ¾î Àü¿ë), ÀûÀº UI ¾øÀÌ ÄÚµå·Î¸¸ Çàµ¿
+/// @ Setting ÇÁ¸®ÆÕ: ¾À ÀÎ½ºÅÏ½º ÂüÁ¶ ¶Ç´Â ¿¡¼Â¸¸ ¿¬°áÇØµµ ÀÚµ¿ Instantiate
 /// </summary>
 public class PokemonBattleManager : MonoBehaviour
 {
-    // ì‹±ê¸€í†¤
+    // ½Ì±ÛÅæ
     public static PokemonBattleManager instance;
 
-    // 'Setting'PreFab ê´€ë ¨
+    // 'Setting'PreFab °ü·Ã
     [Header("Setting Reference")]
     [SerializeField] private Setting settingsRef;
     [SerializeField] private GameObject settingsPrefab;
     [SerializeField] private Transform uiRoot;
     private GameObject _settingsInst;
 
-    // ë°°í‹€ì¤‘ì¸ í¬ì¼“ëª¬ ì •ë³´ í‘œì‹œ
+    // ¹èÆ²ÁßÀÎ Æ÷ÄÏ¸ó Á¤º¸ Ç¥½Ã
     [Header("Infos")]
     [SerializeField] private PokemonInfo myInfo;
     [SerializeField] private PokemonInfo otherInfo;
@@ -35,21 +35,21 @@ public class PokemonBattleManager : MonoBehaviour
     [SerializeField] public TextMeshProUGUI textLog;
     [SerializeField] private TextMeshProUGUI roundText;
 
-    // í”Œë ˆì´ì–´ í–‰ë™ ë²„íŠ¼í™”
+    // ÇÃ·¹ÀÌ¾î Çàµ¿ ¹öÆ°È­
     [Header("Command Buttons")]
     [SerializeField] private Button attackBt;
     [SerializeField] private Button bagBt;
     [SerializeField] private Button battleSkillBt;
     [SerializeField] private Button pokemonListBt;
 
-    // í”Œë ˆì´ì–´ í¬ì¼“ëª¬ ìŠ¤í‚¬ ë²„íŠ¼
+    // ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸ó ½ºÅ³ ¹öÆ°
     [Header("Skill 1-4 Buttons")]
     [SerializeField] private Button skill1Bt;
     [SerializeField] private Button skill2Bt;
     [SerializeField] private Button skill3Bt;
     [SerializeField] private Button skill4Bt;
 
-    // ìƒì íŒ¨ë„ ë° êµì²´íŒ¨ë„
+    // »óÁ¡ÆĞ³Î ¹× ±³Ã¼ÆĞ³Î
     [Header("Shop Panel")]
     [SerializeField] private GameObject shopPanel;
 
@@ -60,7 +60,7 @@ public class PokemonBattleManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI switchBt0Text;
     [SerializeField] private TextMeshProUGUI switchBt1Text;
 
-    // ì¸ê²Œì„ ì§„í–‰ ìƒíƒœ
+    // ÀÎ°ÔÀÓ ÁøÇà »óÅÂ
     private int playerIndex = -1;
     private int enemyIndex = -1;
     private int round = 1;
@@ -125,13 +125,13 @@ public class PokemonBattleManager : MonoBehaviour
         RefreshSkillButtonLabelsFromPlayer();
         RefreshSwitchButtonLabels();
 
-        LogNow("Round " + round.ToString() + " ì‹œì‘");
+        LogNow("Round " + round.ToString() + " ½ÃÀÛ");
     }
 
     /// <summary>
-    /// ì„¤ì •í”„ë¦¬íŒ¹ ê´€ë ¨
+    /// ¼³Á¤ÇÁ¸®ÆÕ °ü·Ã
     /// </summary>
-    // Setting ì¸ìŠ¤í„´ìŠ¤ ë³´ì¥
+    // Setting ÀÎ½ºÅÏ½º º¸Àå
     private void EnsureSettingsInstanceOrBind()
     {
         Setting exists = GameObject.FindObjectOfType<Setting>();
@@ -165,9 +165,9 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ë²„íŠ¼ë³„ ë°”ì¸ë”©
+    /// ¹öÆ°º° ¹ÙÀÎµù
     /// </summary>
-    // í”Œë ˆì´ì–´ í–‰ë™ ë²„íŠ¼
+    // ÇÃ·¹ÀÌ¾î Çàµ¿ ¹öÆ°
     private void WireCommandButtons()
     {
         if (attackBt != null) { attackBt.onClick.RemoveAllListeners(); attackBt.onClick.AddListener(OnClickAttack); }
@@ -175,7 +175,7 @@ public class PokemonBattleManager : MonoBehaviour
         if (battleSkillBt != null) { battleSkillBt.onClick.RemoveAllListeners(); battleSkillBt.onClick.AddListener(OnClickBattleSkillOpen); }
         if (pokemonListBt != null) { pokemonListBt.onClick.RemoveAllListeners(); pokemonListBt.onClick.AddListener(OnClickOpenSwitchPanel); }
     }
-    //í”Œë ˆì´ì–´ í¬ì¼“ëª¬ ìŠ¤í‚¬ ë²„íŠ¼
+    //ÇÃ·¹ÀÌ¾î Æ÷ÄÏ¸ó ½ºÅ³ ¹öÆ°
     private void WireSkillButtons()
     {
         if (skill1Bt != null) { skill1Bt.onClick.RemoveAllListeners(); skill1Bt.onClick.AddListener(OnClickSkill1); }
@@ -183,7 +183,7 @@ public class PokemonBattleManager : MonoBehaviour
         if (skill3Bt != null) { skill3Bt.onClick.RemoveAllListeners(); skill3Bt.onClick.AddListener(OnClickSkill3); }
         if (skill4Bt != null) { skill4Bt.onClick.RemoveAllListeners(); skill4Bt.onClick.AddListener(OnClickSkill4); }
     }
-    // êµì²´í•  í¬ì¼“ëª¬ ì„ íƒ ë²„íŠ¼
+    // ±³Ã¼ÇÒ Æ÷ÄÏ¸ó ¼±ÅÃ ¹öÆ°
     private void WireSwitchButtons()
     {
         if (switchBt0 != null) { switchBt0.onClick.RemoveAllListeners(); switchBt0.onClick.AddListener(OnClickSwitch0); }
@@ -191,9 +191,9 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ì˜¤ë¸Œì íŠ¸ í‘œì‹œ ì œì–´
+    /// ¿ÀºêÁ§Æ® Ç¥½Ã Á¦¾î
     /// </summary>
-    // ì‹œì‘ì‹œ ìƒì  ë° êµì²´ íŒ¨ë„ ë¹„í™œì„±í™”
+    // ½ÃÀÛ½Ã »óÁ¡ ¹× ±³Ã¼ ÆĞ³Î ºñÈ°¼ºÈ­
     private void HideAllSubPanelsAtStart()
     {
         if (shopPanel != null) { shopPanel.SetActive(false); }
@@ -255,7 +255,7 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// êµì²´(2ìŠ¬ë¡¯) ê´€ë ¨
+    /// ±³Ã¼(2½½·Ô) °ü·Ã
     /// </summary>
     private int _switchSlot0Index = -1;
     private int _switchSlot1Index = -1;
@@ -336,11 +336,11 @@ public class PokemonBattleManager : MonoBehaviour
 
         if (switchPanel != null) { switchPanel.SetActive(false); }
 
-        LogNow("í¬ì¼“ëª¬ êµì²´");
+        LogNow("Æ÷ÄÏ¸ó ±³Ã¼");
     }
 
     /// <summary>
-    /// ë²„íŠ¼ OnClickì´ë²¤íŠ¸ ì»¤ë§¨ë“œ
+    /// ¹öÆ° OnClickÀÌº¥Æ® Ä¿¸Çµå
     /// </summary>
     private void OnClickAttack()
     {
@@ -357,7 +357,7 @@ public class PokemonBattleManager : MonoBehaviour
 
     private void OnClickBattleSkillOpen()
     {
-        LogNow("ìŠ¤í‚¬ ì„ íƒ");
+        LogNow("½ºÅ³ ¼±ÅÃ");
     }
 
     private void OnClickOpenSwitchPanel()
@@ -368,7 +368,7 @@ public class PokemonBattleManager : MonoBehaviour
             switchPanel.SetActive(true);
         }
     }
-    // ìŠ¤í‚¬ ë²„íŠ¼ OnClickì´ë²¤íŠ¸ ë°”ì¸ë”©
+    // ½ºÅ³ ¹öÆ° OnClickÀÌº¥Æ® ¹ÙÀÎµù
     private void OnClickSkill1() { OnClickSkillIndex(0); }
     private void OnClickSkill2() { OnClickSkillIndex(1); }
     private void OnClickSkill3() { OnClickSkillIndex(2); }
@@ -383,22 +383,22 @@ public class PokemonBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// í„´ ì²˜ë¦¬
+    /// ÅÏ Ã³¸®
     /// </summary>
     private IEnumerator CoPlayerTurn_NormalAttackThenEnemy()
     {
-        LogNow("í”Œë ˆì´ì–´ ì¼ë°˜ê³µê²©");
+        LogNow("ÇÃ·¹ÀÌ¾î ÀÏ¹İ°ø°İ");
 
-        // ì—°ì¶œ
+        // ¿¬Ãâ
         if (myInfo != null) { yield return StartCoroutine(myInfo.NormalAttackSequence(otherInfo)); }
 
-        // ëŒ€ë¯¸ì§€ ì²˜ë¦¬
+        // ´ë¹ÌÁö Ã³¸®
         yield return StartCoroutine(PlayerCur.Attack(EnemyCur, -1));
 
-        // KO/ë¼ìš´ë“œ íŒì •
+        // KO/¶ó¿îµå ÆÇÁ¤
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
 
-        // ì  í–‰ë™ ëœë¤ìœ¼ë¡œ ì²˜ë¦¬
+        // Àû Çàµ¿ ·£´ıÀ¸·Î Ã³¸®
         if (!IsEnemyAllDown()) { yield return StartCoroutine(CoEnemyActionAuto()); }
 
         SetCommandButtonsActive(true);
@@ -406,9 +406,9 @@ public class PokemonBattleManager : MonoBehaviour
 
     private IEnumerator CoPlayerTurn_SkillThenEnemy(int skillIndex)
     {
-        LogNow("í”Œë ˆì´ì–´ ìŠ¤í‚¬ ì‚¬ìš©");
+        LogNow("ÇÃ·¹ÀÌ¾î ½ºÅ³ »ç¿ë");
 
-        // ìŠ¤í‚¬ë³„ íƒ€ì… íŒë³„(ì—°ì¶œ ì‹œê·¸ë‹ˆì²˜ ìœ„í•¨)
+        // ½ºÅ³º° Å¸ÀÔ ÆÇº°(¿¬Ãâ ½Ã±×´ÏÃ³ À§ÇÔ)
         bool isMelee = false;
         bool isRanged = false;
         bool isHeal = false;
@@ -444,7 +444,7 @@ public class PokemonBattleManager : MonoBehaviour
             }
         }
 
-        // ìŠ¤í‚¬ë³„ ì—°ì¶œ íŒë³„
+        // ½ºÅ³º° ¿¬Ãâ ÆÇº°
         if (isMelee)
         {
             if (myInfo != null) { yield return StartCoroutine(myInfo.MeleeSkillSequence(otherInfo, skillIndex)); }
@@ -475,13 +475,13 @@ public class PokemonBattleManager : MonoBehaviour
             }
         }
 
-        // ëŒ€ë¯¸ì§€/íš¨ê³¼ ê³„ì‚°
+        // ´ë¹ÌÁö/È¿°ú °è»ê
         yield return StartCoroutine(PlayerCur.Attack(EnemyCur, skillIndex));
 
-        // KO/ë¼ìš´ë“œ íŒì •ì‹œ ì‹¤í–‰
+        // KO/¶ó¿îµå ÆÇÁ¤½Ã ½ÇÇà
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
 
-        // ì  í–‰ë™
+        // Àû Çàµ¿
         if (!IsEnemyAllDown()) { yield return StartCoroutine(CoEnemyActionAuto()); }
 
         SetCommandButtonsActive(true);
@@ -492,24 +492,24 @@ public class PokemonBattleManager : MonoBehaviour
         if (EnemyCur == null) { yield break; }
         if (PlayerCur == null) { yield break; }
 
-        LogNow("ì ì˜ ê³µê²©");
+        LogNow("ÀûÀÇ °ø°İ");
 
-        // ì—°ì¶œ
+        // ¿¬Ãâ
         if (otherInfo != null) { yield return StartCoroutine(otherInfo.NormalAttackSequence(myInfo)); }
 
-        // ëŒ€ë¯¸ì§€
+        // ´ë¹ÌÁö
         yield return StartCoroutine(EnemyCur.Attack(PlayerCur, -1));
 
-        // KO/ë¼ìš´ë“œ
+        // KO/¶ó¿îµå
         yield return StartCoroutine(AfterAnyDamageAndCheckKOs());
     }
 
     /// <summary>
-    /// KO/ë¼ìš´ë“œ ì¢…ë£Œ
+    /// KO/¶ó¿îµå Á¾·á
     /// </summary>
     private IEnumerator AfterAnyDamageAndCheckKOs()
     {
-        // ì  ë‹¤ìš´ -> êµì²´ ë˜ëŠ” ë¼ìš´ë“œ ì¦ê°€
+        // Àû ´Ù¿î -> ±³Ã¼ ¶Ç´Â ¶ó¿îµå Áõ°¡
         if (EnemyCur != null)
         {
             if (EnemyCur.Hp <= 0)
@@ -519,18 +519,18 @@ public class PokemonBattleManager : MonoBehaviour
                 {
                     enemyIndex = nextEnemy;
                     RefreshInfos();
-                    LogNow("ì  êµì²´");
+                    LogNow("Àû ±³Ã¼");
                 }
                 else
                 {
                     round = round + 1;
                     RefreshRoundLabel();
-                    LogNow("ë¼ìš´ë“œ í´ë¦¬ì–´");
+                    LogNow("¶ó¿îµå Å¬¸®¾î");
                 }
             }
         }
 
-        // í”Œë ˆì´ì–´ ë‹¤ìš´ -> ìë™ êµì²´
+        // ÇÃ·¹ÀÌ¾î ´Ù¿î -> ÀÚµ¿ ±³Ã¼
         if (PlayerCur != null)
         {
             if (PlayerCur.Hp <= 0)
@@ -542,11 +542,11 @@ public class PokemonBattleManager : MonoBehaviour
                     RefreshInfos();
                     RefreshSkillButtonLabelsFromPlayer();
                     RefreshSwitchButtonLabels();
-                    LogNow("ìë™ êµì²´");
+                    LogNow("ÀÚµ¿ ±³Ã¼");
                 }
                 else
                 {
-                    LogNow("í”Œë ˆì´ì–´ ì „ë©¸");
+                    LogNow("ÇÃ·¹ÀÌ¾î Àü¸ê");
                 }
             }
         }
@@ -592,7 +592,7 @@ public class PokemonBattleManager : MonoBehaviour
         return true;
     }
 
-    // í…ìŠ¤íŠ¸ ë¡œê·¸ íƒìƒ‰
+    // ÅØ½ºÆ® ·Î±× Å½»ö
     private void LogNow(string s)
     {
         if (textLog == null) { return; }

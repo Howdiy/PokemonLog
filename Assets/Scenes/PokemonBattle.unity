@@ -1579,7 +1579,7 @@ MonoBehaviour:
   nameText: {fileID: 1697737164}
   hpBar: {fileID: 1336340305}
   BattleGameManager: {fileID: 1699295608}
-  isPlayerSide: 0
+  isPlayerSide: 1
 --- !u!1 &354189719
 GameObject:
   m_ObjectHideFlags: 0
@@ -2791,7 +2791,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -250, y: -65}
+  m_AnchoredPosition: {x: -250, y: -85}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &702402978
@@ -3270,7 +3270,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 200, y: -380}
+  m_AnchoredPosition: {x: 200, y: -400}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &771588480
@@ -3303,7 +3303,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300000, guid: b12598c9afc6b654e826bf9c8dc3cecc, type: 3}
+    m_PressedSprite: {fileID: 21300000, guid: 6e0ea77332e1e1e4ca16e553adeff721, type: 3}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -3349,7 +3349,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: dd2106f32445b8c48816ff22eecbef33, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1b5b5b57b7f9f134bb58b60c0c9fc841, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -3752,7 +3752,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 700, y: -380}
+  m_AnchoredPosition: {x: 700, y: -400}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &895715396
@@ -3785,7 +3785,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300000, guid: e21d93d212e30a34fb02d2ff08b1d730, type: 3}
+    m_PressedSprite: {fileID: 21300000, guid: 68c30e2fbe95f0846bf89a1b7d906cc0, type: 3}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -3831,7 +3831,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: fc828ab51fb20604ebb8fc9e28b08e91, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 729a114f9e825094dbe1cde281d30bce, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4162,7 +4162,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300000, guid: f57c70cd401365a49843106de484bc80, type: 3}
+    m_PressedSprite: {fileID: 21300000, guid: 357e9fca875f4c44bab2484bebdd39b2, type: 3}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -4208,7 +4208,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: dc2cbe198414c9146914a26f53a45a89, type: 3}
+  m_Sprite: {fileID: 21300000, guid: f9340cbdce631e6409eb2efff8194883, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4310,9 +4310,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1699295608}
+      - m_Target: {fileID: 1699295607}
         m_TargetAssemblyTypeName: PokemonBattleManager, Assembly-CSharp
-        m_MethodName: OnClickSkill0
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4684,7 +4684,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 250, y: -65}
+  m_AnchoredPosition: {x: 250, y: -85}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1336718773
@@ -6701,7 +6701,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300000, guid: 5a8d9ed1e42257f489d0bdb6782a29b1, type: 3}
+    m_PressedSprite: {fileID: 21300000, guid: f82f81afb759c6c4eaf278b05e66331b, type: 3}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -6747,7 +6747,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 77307e74df9ec0247893bcfd620dd092, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e0838be0a82d6cd4f9679cd334446952, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

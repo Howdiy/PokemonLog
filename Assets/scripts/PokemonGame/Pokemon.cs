@@ -4,11 +4,11 @@ using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// @ í¬ì¼“ëª¬ ê¸°ë³¸ ëª¨ë¸ @ MonoBehaviour ë¯¸ìƒì†
+/// @ Æ÷ÄÏ¸ó ±âº» ¸ğµ¨ @ MonoBehaviour ¹Ì»ó¼Ó
 /// </summary>
 public class Pokemon
 {
-    /// <summary> íƒ€ì… </summary>
+    /// <summary> Å¸ÀÔ </summary>
     public enum Tpye
     {
         fire,
@@ -17,7 +17,7 @@ public class Pokemon
         elec
     }
 
-    /// <summary> ì¸ë±ìŠ¤ </summary>
+    /// <summary> ÀÎµ¦½º </summary>
     public enum PokemonIndex
     {
         pikach,
@@ -26,7 +26,7 @@ public class Pokemon
         eSang
     }
 
-    /// <summary> íƒ€ì… ìƒì„± </summary>
+    /// <summary> Å¸ÀÔ »ó¼º </summary>
     enum SkillType
     {
         atkSk,
@@ -46,12 +46,12 @@ public class Pokemon
     public int def;
     public int speed;
 
-    /// <summary> íƒ€ì… ìƒì„± ë°°ìœ¨ </summary>
+    /// <summary> Å¸ÀÔ »ó¼º ¹èÀ² </summary>
     const float h = 0.5f;
     const float n = 1f;
     const float g = 2f;
 
-    /// <summary> ì•„í‹€ë¼ìŠ¤ í‚¤ </summary>
+    /// <summary> ¾ÆÆ²¶ó½º Å° </summary>
     public string atlasResourcePath = "";
     public string spriteKeyChoice = "";
     public string spriteKeyBattleIdle = "";
@@ -59,10 +59,10 @@ public class Pokemon
     public string spriteKeyDef = "";
     public string spriteKeyHp = "";
 
-    /// <summary> ìŠ¤í‚¬ ì´ë¦„ </summary>
+    /// <summary> ½ºÅ³ ÀÌ¸§ </summary>
     public string[] skillNames = new string[4];
 
-    /// <summary> ìŠ¤í‚¬ íƒ€ì… ë™ì‘ ëª¨ë¸ </summary>
+    /// <summary> ½ºÅ³ Å¸ÀÔ µ¿ÀÛ ¸ğµ¨ </summary>
     public SkillTpye[] skillTypeBehaviours = new SkillTpye[4];
 
     public int Hp
@@ -78,7 +78,7 @@ public class Pokemon
         }
     }
 
-    /// <summary> ìƒì„±ì @ ê¸°ë³¸ ìŠ¤í‚¬ ì´ë¦„ ì„¸íŒ… </summary>
+    /// <summary> »ı¼ºÀÚ @ ±âº» ½ºÅ³ ÀÌ¸§ ¼¼ÆÃ </summary>
     public Pokemon()
     {
         skillNames[0] = Skill1();
@@ -86,20 +86,20 @@ public class Pokemon
         skillNames[2] = Skill3();
         skillNames[3] = Skill4();
 
-        // í¬ì¼“ëª¬ì˜ ìŠ¤í‚¬ ë§¤í•‘
+        // Æ÷ÄÏ¸óÀÇ ½ºÅ³ ¸ÅÇÎ
         skillTypeBehaviours[0] = new MeleeAttackType();
         skillTypeBehaviours[1] = new RangedAttackType();
         skillTypeBehaviours[2] = new DefenseType();
         skillTypeBehaviours[3] = new HealType();
 
-        // í¬ì¼“ëª¬ ì´ˆê¸° ê°œì²´ê°’
+        // Æ÷ÄÏ¸ó ÃÊ±â °³Ã¼°ª
         Hp = Random.Range(0, 32);
         atk = Random.Range(0, 32);
         def = Random.Range(0, 32);
         speed = Random.Range(0, 32);
     }
 
-    /// <summary> í–‰=ê³µê²©, ì—´=ë°©ì–´ </summary>
+    /// <summary> Çà=°ø°İ, ¿­=¹æ¾î </summary>
     public static float[,] battleType =
     {
         { h, h, g, n },
@@ -108,20 +108,20 @@ public class Pokemon
         { n, g, h, h },
     };
 
-    /// <summary> ìŠ¤í‚¬ í‘œì‹œëª… ì ‘ê·¼ì </summary>
-    public virtual string Skill1() { return "ê³µê²©"; }
-    public virtual string Skill2() { return "ê³µê²©"; }
-    public virtual string Skill3() { return "ê³µê²©"; }
-    public virtual string Skill4() { return "ê³µê²©"; }
+    /// <summary> ½ºÅ³ Ç¥½Ã¸í Á¢±ÙÀÚ </summary>
+    public virtual string Skill1() { return "°ø°İ"; }
+    public virtual string Skill2() { return "°ø°İ"; }
+    public virtual string Skill3() { return "°ø°İ"; }
+    public virtual string Skill4() { return "°ø°İ"; }
 
     /// <summary>
-    /// ì „íˆ¬ 1í–‰ë™ ì½”ë£¨í‹´
-    /// skillIndex < 0 ì´ë©´ ì¼ë°˜ê³µê²©
-    /// HealType, DefenseType ì€ ìŠ¤íƒ¯ ì¡°ì • ë° ë¡œê·¸ í›„ ì¢…ë£Œ
+    /// ÀüÅõ 1Çàµ¿ ÄÚ·çÆ¾
+    /// skillIndex < 0 ÀÌ¸é ÀÏ¹İ°ø°İ
+    /// HealType, DefenseType Àº ½ºÅÈ Á¶Á¤ ¹× ·Î±× ÈÄ Á¾·á
     /// </summary>
     public IEnumerator Attack(Pokemon other, int skillIndex)
     {
-        // íšŒë³µ ë° ë°©ì–´ ìŠ¤í‚¬ íŒì •
+        // È¸º¹ ¹× ¹æ¾î ½ºÅ³ ÆÇÁ¤
         bool isHeal = false;
         bool isDefense = false;
         SkillTpye model = null;
@@ -149,7 +149,7 @@ public class Pokemon
             if (maxDef < 10) { maxDef = 10; }
             int add = Random.Range(10, maxDef + 1);
 
-            // ë²„í”„ëŠ” ë°°í‹€ë§¤ë‹ˆì €ë¥¼ í†µí•´ ì ìš© ë° ë§Œë£Œ ê´€ë¦¬
+            // ¹öÇÁ´Â ¹èÆ²¸Å´ÏÀú¸¦ ÅëÇØ Àû¿ë ¹× ¸¸·á °ü¸®
             if (PokemonBattleManager.instance != null)
             {
                 PokemonBattleManager.instance.ApplyDefenseBuff(this, add);
@@ -159,7 +159,7 @@ public class Pokemon
             {
                 if (PokemonBattleManager.instance.textLog != null)
                 {
-                    PokemonBattleManager.instance.textLog.text = name + "ì˜ ë°©ì–´ê°€ " + add.ToString() + " ìƒìŠ¹í•˜ì˜€ë‹¤.";
+                    PokemonBattleManager.instance.textLog.text = name + "ÀÇ ¹æ¾î°¡ " + add.ToString() + " »ó½ÂÇÏ¿´´Ù.";
                 }
             }
             yield return new WaitForSeconds(0.5f);
@@ -177,19 +177,19 @@ public class Pokemon
             {
                 if (PokemonBattleManager.instance.textLog != null)
                 {
-                    PokemonBattleManager.instance.textLog.text = name + "ì˜ ì²´ë ¥ì´ " + heal.ToString() + " íšŒë³µë˜ì—ˆë‹¤.";
+                    PokemonBattleManager.instance.textLog.text = name + "ÀÇ Ã¼·ÂÀÌ " + heal.ToString() + " È¸º¹µÇ¾ú´Ù.";
                 }
             }
             yield return new WaitForSeconds(0.5f);
             yield break;
         }
 
-        // @ ê³µê²© ë¼ë²¨ í‘œì‹œ
+        // @ °ø°İ ¶óº§ Ç¥½Ã
         if (PokemonBattleManager.instance != null)
         {
             if (PokemonBattleManager.instance.textLog != null)
             {
-                string dispName = "ê³µê²©";
+                string dispName = "°ø°İ";
                 if (skillNames != null)
                 {
                     if (skillIndex >= 0)
@@ -200,11 +200,11 @@ public class Pokemon
                         }
                     }
                 }
-                PokemonBattleManager.instance.textLog.text = name + "ì˜ " + dispName + " ê³µê²©";
+                PokemonBattleManager.instance.textLog.text = name + "ÀÇ " + dispName + " °ø°İ";
             }
         }
 
-        // ì¼ë°˜ ê³µê²© ë°ë¯¸ì§€ ê¸°ë³¸ ê³µì‹
+        // ÀÏ¹İ °ø°İ µ¥¹ÌÁö ±âº» °ø½Ä
         float typeMul = battleType[(int)type, (int)other.type];
         float raw = (atk - (other.def * 0.5f));
         raw = raw < 1f ? 1f : raw;
@@ -216,7 +216,7 @@ public class Pokemon
             {
                 if (PokemonBattleManager.instance.textLog != null)
                 {
-                    PokemonBattleManager.instance.textLog.text = "íš¨ê³¼ëŠ” êµ‰ì¥í–ˆë‹¤!";
+                    PokemonBattleManager.instance.textLog.text = "È¿°ú´Â ±²ÀåÇß´Ù!";
                 }
             }
         }
@@ -228,7 +228,7 @@ public class Pokemon
                 {
                     if (PokemonBattleManager.instance.textLog != null)
                     {
-                        PokemonBattleManager.instance.textLog.text = "íš¨ê³¼ëŠ” ë¯¸ë¯¸í–ˆë‹¤";
+                        PokemonBattleManager.instance.textLog.text = "È¿°ú´Â ¹Ì¹ÌÇß´Ù";
                     }
                 }
             }
@@ -247,9 +247,9 @@ public class Pokemon
                 }
             }
         }
-        // ë°ë¯¸ì§€ ëˆ„ì í•˜ì—¬ í˜„ì¬ì²´ë ¥ìœ¼ë¡œ ë³€ê²½
+        // µ¥¹ÌÁö ´©ÀûÇÏ¿© ÇöÀçÃ¼·ÂÀ¸·Î º¯°æ
         other.Hp = other.Hp - adjustedDamage;
-        // -Hp í‘œê¸° ë°©ì§€ìš©
+        // -Hp Ç¥±â ¹æÁö¿ë
         other.Hp = (other.Hp <= 0) ? 0 : other.Hp;
 
         yield return new WaitForSeconds(1f);

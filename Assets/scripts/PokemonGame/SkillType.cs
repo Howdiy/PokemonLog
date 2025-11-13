@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// @ SkillType ì»´í¬ë„ŒíŠ¸
-/// @ í¬ì¼“ëª¬ë³„ ìŠ¤í‚¬ íƒ€ì…(ê·¼ì ‘, ì›ê±°ë¦¬, íšŒë³µ, ë°©ì–´) ì´í™íŠ¸ í”„ë¦¬íŒ¹ì„ ì¸ìŠ¤í™í„°ì—ì„œ ì§€ì •
+/// @ SkillType ÄÄÆ÷³ÍÆ®
+/// @ Æ÷ÄÏ¸óº° ½ºÅ³ Å¸ÀÔ(±ÙÁ¢, ¿ø°Å¸®, È¸º¹, ¹æ¾î) ÀÌÆåÆ® ÇÁ¸®ÆÕÀ» ÀÎ½ºÆåÅÍ¿¡¼­ ÁöÁ¤
 /// </summary>
 public class SkillType : MonoBehaviour
 {
@@ -11,14 +11,14 @@ public class SkillType : MonoBehaviour
     [System.Serializable]
     public class PokemonSkillTypeFxSet
     {
-        public GameObject meleeFx;    // @ ê·¼ì ‘ê³µê²© íƒ€ì… ì´í™íŠ¸
-        public GameObject rangedFx;   // @ ì›ê±°ë¦¬ê³µê²© íƒ€ì… ì´í™íŠ¸
-        public GameObject healFx;     // @ íšŒë³µ íƒ€ì… ì´í™íŠ¸
-        public GameObject defenseFx;  // @ ë°©ì–´ íƒ€ì… ì´í™íŠ¸
+        public GameObject meleeFx;    // @ ±ÙÁ¢°ø°İ Å¸ÀÔ ÀÌÆåÆ®
+        public GameObject rangedFx;   // @ ¿ø°Å¸®°ø°İ Å¸ÀÔ ÀÌÆåÆ®
+        public GameObject healFx;     // @ È¸º¹ Å¸ÀÔ ÀÌÆåÆ®
+        public GameObject defenseFx;  // @ ¹æ¾î Å¸ÀÔ ÀÌÆåÆ®
     }
 
     [Header("Common FX")]
-    public GameObject normalAttackFxPrefab; // @ ì¼ë°˜ê³µê²© ê³µí†µ ì´í™íŠ¸
+    public GameObject normalAttackFxPrefab; // @ ÀÏ¹İ°ø°İ °øÅë ÀÌÆåÆ®
 
     [Header("Pika FX")]
     public PokemonSkillTypeFxSet pikaFxSet;
@@ -46,7 +46,7 @@ public class SkillType : MonoBehaviour
     }
 
     /// <summary>
-    /// @ ì¼ë°˜ê³µê²© ì´í™íŠ¸ ë°˜í™˜
+    /// @ ÀÏ¹İ°ø°İ ÀÌÆåÆ® ¹İÈ¯
     /// </summary>
     public GameObject GetNormalAttackFx()
     {
@@ -54,7 +54,7 @@ public class SkillType : MonoBehaviour
     }
 
     /// <summary>
-    /// @ í¬ì¼“ëª¬ ì¸ë±ìŠ¤ + ìŠ¤í‚¬ íƒ€ì… ëª¨ë¸ë¡œ ì´í™íŠ¸ ë°˜í™˜
+    /// @ Æ÷ÄÏ¸ó ÀÎµ¦½º + ½ºÅ³ Å¸ÀÔ ¸ğµ¨·Î ÀÌÆåÆ® ¹İÈ¯
     /// </summary>
     public GameObject GetSkillFxByType(Pokemon.PokemonIndex index, SkillTypeBase behaviour)
     {
@@ -69,7 +69,7 @@ public class SkillType : MonoBehaviour
             return null;
         }
 
-        // @ íƒ€ì… ë§¤ì¹­
+        // @ Å¸ÀÔ ¸ÅÄª
         if (behaviour is MeleeAttackType)
         {
             return set.meleeFx;
@@ -94,7 +94,7 @@ public class SkillType : MonoBehaviour
     }
 
     /// <summary>
-    /// @ í¬ì¼“ëª¬ ì¸ë±ìŠ¤ + (ìŠ¬ë¡¯ ë°°ì—´, skillIndex) ê¸°ë°˜ìœ¼ë¡œ ì´í™íŠ¸ ë°˜í™˜
+    /// @ Æ÷ÄÏ¸ó ÀÎµ¦½º + (½½·Ô ¹è¿­, skillIndex) ±â¹İÀ¸·Î ÀÌÆåÆ® ¹İÈ¯
     /// </summary>
     public GameObject GetSkillFx(Pokemon.PokemonIndex index, int skillIndex, SkillTypeBase[] behaviours)
     {
@@ -118,7 +118,7 @@ public class SkillType : MonoBehaviour
     }
 
     /// <summary>
-    /// @ í¬ì¼“ëª¬ ì¸ë±ìŠ¤ì— í•´ë‹¹í•˜ëŠ” FX ì„¸íŠ¸ ì„ íƒ
+    /// @ Æ÷ÄÏ¸ó ÀÎµ¦½º¿¡ ÇØ´çÇÏ´Â FX ¼¼Æ® ¼±ÅÃ
     /// </summary>
     private PokemonSkillTypeFxSet GetSetByIndex(Pokemon.PokemonIndex index)
     {
@@ -142,26 +142,26 @@ public class SkillType : MonoBehaviour
 }
 
 /// <summary>
-/// @ ìŠ¤í‚¬ íƒ€ì… ë² ì´ìŠ¤(ì •ìƒ ì² ì)
+/// @ ½ºÅ³ Å¸ÀÔ º£ÀÌ½º(Á¤»ó Ã¶ÀÚ)
 /// </summary>
 public abstract class SkillTypeBase
 {
     /// <summary>
-    /// @ ìŠ¤í‚¬ íƒ€ì…ë³„ ë°ë¯¸ì§€ ì¬ê³„ì‚° í›…
+    /// @ ½ºÅ³ Å¸ÀÔº° µ¥¹ÌÁö Àç°è»ê ÈÅ
     /// </summary>
     public abstract int ComputeDamageOverride(Pokemon self, Pokemon other, int baseDamage);
 }
 
 /// <summary>
-/// @ í•˜ìœ„ í˜¸í™˜ìš© ì˜¤íƒˆì í´ë˜ìŠ¤
-/// @ ê¸°ì¡´ ì½”ë“œì˜ ': SkillTpye' ìƒì†ì„ ê·¸ëŒ€ë¡œ í†µê³¼ì‹œí‚¤ê¸° ìœ„í•œ ì¶”ìƒ í´ë˜ìŠ¤
+/// @ ÇÏÀ§ È£È¯¿ë ¿ÀÅ»ÀÚ Å¬·¡½º
+/// @ ±âÁ¸ ÄÚµåÀÇ ': SkillTpye' »ó¼ÓÀ» ±×´ë·Î Åë°ú½ÃÅ°±â À§ÇÑ Ãß»ó Å¬·¡½º
 /// </summary>
 public abstract class SkillTpye : SkillTypeBase
 {
 }
 
 /// <summary>
-/// @ SkillType í™•ì¥ ë©”ì„œë“œ(í•˜ìœ„ ì½”ë“œ ì‹œê·¸ë‹ˆì²˜ í˜¸í™˜ìš©)
+/// @ SkillType È®Àå ¸Ş¼­µå(ÇÏÀ§ ÄÚµå ½Ã±×´ÏÃ³ È£È¯¿ë)
 /// </summary>
 public static class SkillTypeExtensions
 {

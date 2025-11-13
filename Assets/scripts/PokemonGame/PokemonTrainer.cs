@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// @ í¬ì¼“ëª¬ íŠ¸ë ˆì´ë„ˆê°€ ë³´ìœ í•œ í¬ì¼“ëª¬ íŒ€ì„ ê´€ë¦¬í•˜ëŠ” í´ëž˜ìŠ¤
-/// @ ì„ íƒ ì”¬ì—ì„œì˜ ì„ ë°œ ì €ìž¥ê³¼ ë°°í‹€ ì¤‘ í™œì„± ìŠ¬ë¡¯ ì¶”ì ì„ ë‹´ë‹¹í•œë‹¤.
+/// @ Æ÷ÄÏ¸ó Æ®·¹ÀÌ³Ê°¡ º¸À¯ÇÑ Æ÷ÄÏ¸ó ÆÀÀ» °ü¸®ÇÏ´Â Å¬·¡½º
+/// @ ¼±ÅÃ ¾À¿¡¼­ÀÇ ¼±¹ß ÀúÀå°ú ¹èÆ² Áß È°¼º ½½·Ô ÃßÀûÀ» ´ã´çÇÑ´Ù.
 /// </summary>
 public class PokemonTrainer
 {
